@@ -11,7 +11,9 @@ async function migrate() {
 
   console.log("Running database migration...");
   await pool.query(sql);
-  console.log("Migration completed successfully.");
+  console.log(
+    "Migration completed successfully (tables created or already exist).",
+  );
   await pool.end();
 }
 

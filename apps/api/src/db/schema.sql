@@ -7,14 +7,14 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ─── Enums ───────────────────────────────────────────────
-CREATE TYPE user_role AS ENUM ('admin', 'teacher', 'student');
-CREATE TYPE assignment_type AS ENUM ('html-css-js', 'react');
-CREATE TYPE submission_status AS ENUM ('pending', 'queued', 'running', 'completed', 'failed', 'error');
-CREATE TYPE judge_job_status AS ENUM ('pending', 'locked', 'running', 'completed', 'failed', 'dead');
-CREATE TYPE artifact_type AS ENUM ('screenshot', 'log', 'report');
+DO $$ BEGIN CREATE TYPE user_role AS ENUM ('admin', 'teacher', 'student'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE assignment_type AS ENUM ('html-css-js', 'react'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE submission_status AS ENUM ('pending', 'queued', 'running', 'completed', 'failed', 'error'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE judge_job_status AS ENUM ('pending', 'locked', 'running', 'completed', 'failed', 'dead'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE artifact_type AS ENUM ('screenshot', 'log', 'report'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ─── Users ───────────────────────────────────────────────
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   username      VARCHAR(50) NOT NULL,
   display_name  VARCHAR(50) NOT NULL,
@@ -27,10 +27,10 @@ CREATE TABLE users (
   CONSTRAINT uq_users_username UNIQUE (username)
 );
 
-CREATE INDEX idx_users_role ON users (role);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users (role);
 
 -- ─── Classes ─────────────────────────────────────────────
-CREATE TABLE classes (
+CREATE TABLE IF NOT EXISTS classes (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name        VARCHAR(100) NOT NULL,
   description TEXT NOT NULL DEFAULT '',
@@ -41,7 +41,7 @@ CREATE TABLE classes (
 );
 
 -- ─── Class members ───────────────────────────────────────
-CREATE TABLE class_members (
+CREATE TABLE IF NOT EXISTS class_members (
   id        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   class_id  UUID NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
   user_id   UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -50,11 +50,11 @@ CREATE TABLE class_members (
   CONSTRAINT uq_class_member UNIQUE (class_id, user_id)
 );
 
-CREATE INDEX idx_class_members_user ON class_members (user_id);
-CREATE INDEX idx_class_members_class ON class_members (class_id);
+CREATE INDEX IF NOT EXISTS idx_class_members_user ON class_members (user_id);
+CREATE INDEX IF NOT EXISTS idx_class_members_class ON class_members (class_id);
 
 -- ─── Assignments ─────────────────────────────────────────
-CREATE TABLE assignments (
+CREATE TABLE IF NOT EXISTS assignments (
   id                        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   class_id                  UUID NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
   title                     VARCHAR(200) NOT NULL,
@@ -67,10 +67,10 @@ CREATE TABLE assignments (
   updated_at                TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_assignments_class ON assignments (class_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_class ON assignments (class_id);
 
 -- ─── Assignment specs (judge configuration) ──────────────
-CREATE TABLE assignment_specs (
+CREATE TABLE IF NOT EXISTS assignment_specs (
   id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   assignment_id  UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
   start_command  VARCHAR(255) NOT NULL DEFAULT 'static',
@@ -85,7 +85,7 @@ CREATE TABLE assignment_specs (
 );
 
 -- ─── Submissions ─────────────────────────────────────────
-CREATE TABLE submissions (
+CREATE TABLE IF NOT EXISTS submissions (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   assignment_id UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
   user_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -97,13 +97,13 @@ CREATE TABLE submissions (
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_submissions_assignment ON submissions (assignment_id);
-CREATE INDEX idx_submissions_user ON submissions (user_id);
-CREATE INDEX idx_submissions_assignment_user ON submissions (assignment_id, user_id);
-CREATE INDEX idx_submissions_status ON submissions (status);
+CREATE INDEX IF NOT EXISTS idx_submissions_assignment ON submissions (assignment_id);
+CREATE INDEX IF NOT EXISTS idx_submissions_user ON submissions (user_id);
+CREATE INDEX IF NOT EXISTS idx_submissions_assignment_user ON submissions (assignment_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_submissions_status ON submissions (status);
 
 -- ─── Submission files ────────────────────────────────────
-CREATE TABLE submission_files (
+CREATE TABLE IF NOT EXISTS submission_files (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   submission_id UUID NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
   path          VARCHAR(500) NOT NULL,
@@ -112,10 +112,10 @@ CREATE TABLE submission_files (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_submission_files_submission ON submission_files (submission_id);
+CREATE INDEX IF NOT EXISTS idx_submission_files_submission ON submission_files (submission_id);
 
 -- ─── Submission runs (each judge execution) ──────────────
-CREATE TABLE submission_runs (
+CREATE TABLE IF NOT EXISTS submission_runs (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   submission_id UUID NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
   status        submission_status NOT NULL DEFAULT 'pending',
@@ -128,10 +128,10 @@ CREATE TABLE submission_runs (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_submission_runs_submission ON submission_runs (submission_id);
+CREATE INDEX IF NOT EXISTS idx_submission_runs_submission ON submission_runs (submission_id);
 
 -- ─── Submission artifacts (screenshots, logs, reports) ───
-CREATE TABLE submission_artifacts (
+CREATE TABLE IF NOT EXISTS submission_artifacts (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   run_id        UUID NOT NULL REFERENCES submission_runs(id) ON DELETE CASCADE,
   submission_id UUID NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
@@ -141,11 +141,11 @@ CREATE TABLE submission_artifacts (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_submission_artifacts_run ON submission_artifacts (run_id);
-CREATE INDEX idx_submission_artifacts_submission ON submission_artifacts (submission_id);
+CREATE INDEX IF NOT EXISTS idx_submission_artifacts_run ON submission_artifacts (run_id);
+CREATE INDEX IF NOT EXISTS idx_submission_artifacts_submission ON submission_artifacts (submission_id);
 
 -- ─── Judge jobs (PostgreSQL-based queue) ─────────────────
-CREATE TABLE judge_jobs (
+CREATE TABLE IF NOT EXISTS judge_jobs (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   submission_id UUID NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
   run_id        UUID NOT NULL REFERENCES submission_runs(id) ON DELETE CASCADE,
@@ -161,13 +161,13 @@ CREATE TABLE judge_jobs (
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_judge_jobs_status ON judge_jobs (status);
-CREATE INDEX idx_judge_jobs_submission ON judge_jobs (submission_id);
+CREATE INDEX IF NOT EXISTS idx_judge_jobs_status ON judge_jobs (status);
+CREATE INDEX IF NOT EXISTS idx_judge_jobs_submission ON judge_jobs (submission_id);
 -- For the polling query: find oldest unlocked pending job
-CREATE INDEX idx_judge_jobs_pending ON judge_jobs (status, created_at) WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_judge_jobs_pending ON judge_jobs (status, created_at) WHERE status = 'pending';
 
 -- ─── Password reset logs ─────────────────────────────────
-CREATE TABLE password_reset_logs (
+CREATE TABLE IF NOT EXISTS password_reset_logs (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   reset_by    UUID NOT NULL REFERENCES users(id),
@@ -175,7 +175,7 @@ CREATE TABLE password_reset_logs (
 );
 
 -- ─── Bulk import jobs ────────────────────────────────────
-CREATE TABLE bulk_import_jobs (
+CREATE TABLE IF NOT EXISTS bulk_import_jobs (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   imported_by   UUID NOT NULL REFERENCES users(id),
   total_count   INTEGER NOT NULL DEFAULT 0,
@@ -194,9 +194,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_users_updated_at ON users;
 CREATE TRIGGER trg_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+DROP TRIGGER IF EXISTS trg_classes_updated_at ON classes;
 CREATE TRIGGER trg_classes_updated_at BEFORE UPDATE ON classes FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+DROP TRIGGER IF EXISTS trg_assignments_updated_at ON assignments;
 CREATE TRIGGER trg_assignments_updated_at BEFORE UPDATE ON assignments FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+DROP TRIGGER IF EXISTS trg_assignment_specs_updated_at ON assignment_specs;
 CREATE TRIGGER trg_assignment_specs_updated_at BEFORE UPDATE ON assignment_specs FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+DROP TRIGGER IF EXISTS trg_submissions_updated_at ON submissions;
 CREATE TRIGGER trg_submissions_updated_at BEFORE UPDATE ON submissions FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+DROP TRIGGER IF EXISTS trg_judge_jobs_updated_at ON judge_jobs;
 CREATE TRIGGER trg_judge_jobs_updated_at BEFORE UPDATE ON judge_jobs FOR EACH ROW EXECUTE FUNCTION update_updated_at();
