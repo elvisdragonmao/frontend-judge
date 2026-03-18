@@ -68,6 +68,8 @@ export class ReactPipeline implements JudgePipeline {
     }
 
     // 4. Write playwright config
+    const totalTimeoutMs = spec.timeoutMs + 120_000;
+
     fs.writeFileSync(
       path.join(workDir, "playwright.config.ts"),
       `
@@ -85,7 +87,7 @@ export default defineConfig({
     command: 'cd project && npm install && npm run build && npx serve -s build -l 3000',
     port: 3000,
     reuseExistingServer: false,
-    timeout: 120000,
+    timeout: ${totalTimeoutMs},
   },
   reporter: [['json', { outputFile: 'artifacts/results.json' }]],
 });
@@ -94,7 +96,7 @@ export default defineConfig({
     );
 
     // 5. Run in Docker
-    const log = this.runInDocker(workDir, spec.timeoutMs);
+    const log = this.runInDocker(workDir, totalTimeoutMs);
 
     // 6. Parse results (same as HTML/CSS/JS)
     return this.parseResults(workDir, log, artifactsDir);
@@ -145,7 +147,13 @@ export default defineConfig({
         stdout?: string;
         stderr?: string;
         message?: string;
+        code?: string;
       };
+      if (error.code === "ETIMEDOUT") {
+        throw new Error(
+          `[Docker execution]\nJudge timed out after ${Math.ceil(timeoutMs / 1000)}s\n${error.stdout ?? ""}\n${error.stderr ?? ""}`,
+        );
+      }
       return `[Docker execution]\n${error.stdout ?? ""}\n${error.stderr ?? ""}\n${error.message ?? ""}`;
     }
   }

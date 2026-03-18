@@ -16,6 +16,9 @@ export const AssignmentSpec = z.object({
 });
 export type AssignmentSpec = z.infer<typeof AssignmentSpec>;
 
+export const SubmissionRecordAction = z.enum(["keep", "delete"]);
+export type SubmissionRecordAction = z.infer<typeof SubmissionRecordAction>;
+
 export const CreateAssignmentRequest = z.object({
   classId: z.string().uuid(),
   title: z.string().min(1).max(200),
@@ -27,9 +30,13 @@ export const CreateAssignmentRequest = z.object({
 });
 export type CreateAssignmentRequest = z.infer<typeof CreateAssignmentRequest>;
 
-export const UpdateAssignmentRequest = CreateAssignmentRequest.partial().omit({
-  classId: true,
-});
+export const UpdateAssignmentRequest = CreateAssignmentRequest.partial()
+  .omit({
+    classId: true,
+  })
+  .extend({
+    submissionRecordAction: SubmissionRecordAction.optional(),
+  });
 export type UpdateAssignmentRequest = z.infer<typeof UpdateAssignmentRequest>;
 
 export const AssignmentSummary = z.object({

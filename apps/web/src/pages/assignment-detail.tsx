@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import {
   useAssignmentDetail,
   useSubmissions,
@@ -53,6 +53,11 @@ export function AssignmentDetailPage() {
           <h1 className="text-2xl font-bold">{assignment.title}</h1>
           <Badge variant="secondary">{assignment.type}</Badge>
           {isExpired && <Badge variant="destructive">已截止</Badge>}
+          {user && isStaff(user.role) && (
+            <Button asChild size="sm" variant="outline">
+              <Link to={`/assignments/${assignment.id}/edit`}>編輯題目</Link>
+            </Button>
+          )}
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {assignment.className}

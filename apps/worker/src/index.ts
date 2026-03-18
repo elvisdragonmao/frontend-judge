@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { MINIO_BUCKETS } from "@judge/shared";
 import { config } from "./config.js";
-import { query, queryOne } from "./db.js";
+import { pool, query, queryMany, queryOne } from "./db.js";
 import { uploadFile } from "./minio.js";
 import { HtmlCssJsPipeline } from "./pipelines/html-css-js.pipeline.js";
 import { ReactPipeline } from "./pipelines/react.pipeline.js";
@@ -20,6 +20,22 @@ interface JobRow {
   status: string;
   attempts: number;
   max_attempts: number;
+}
+
+let activeJob: JobRow | null = null;
+let shuttingDown = false;
+
+function stepLog(message: string) {
+  return `[${new Date().toISOString()}] ${message}`;
+}
+
+async function appendRunLog(runId: string, message: string) {
+  await query(
+    `UPDATE submission_runs
+     SET log = COALESCE(log || E'\n', '') || $1
+     WHERE id = $2`,
+    [stepLog(message), runId],
+  );
 }
 
 interface SpecRow {
@@ -48,6 +64,7 @@ async function acquireJob(): Promise<JobRow | null> {
 }
 
 async function processJob(job: JobRow) {
+  activeJob = job;
   console.log(
     `[${config.WORKER_ID}] Processing job ${job.id} (submission: ${job.submission_id})`,
   );
@@ -58,12 +75,13 @@ async function processJob(job: JobRow) {
     [job.id],
   );
   await query(
-    "UPDATE submission_runs SET status = 'running', started_at = NOW() WHERE id = $1",
+    "UPDATE submission_runs SET status = 'running', started_at = NOW(), log = NULL WHERE id = $1",
     [job.run_id],
   );
   await query("UPDATE submissions SET status = 'running' WHERE id = $1", [
     job.submission_id,
   ]);
+  await appendRunLog(job.run_id, "Job acquired");
 
   // Get assignment spec
   const spec = await queryOne<SpecRow>(
@@ -76,7 +94,9 @@ async function processJob(job: JobRow) {
   );
 
   if (!spec) {
+    await appendRunLog(job.run_id, "Assignment spec not found");
     await failJob(job, "Assignment spec not found");
+    activeJob = null;
     return;
   }
 
@@ -84,13 +104,19 @@ async function processJob(job: JobRow) {
   const pipeline = pipelines[assignmentType];
 
   if (!pipeline) {
+    await appendRunLog(
+      job.run_id,
+      `Unknown assignment type: ${assignmentType}`,
+    );
     await failJob(job, `Unknown assignment type: ${assignmentType}`);
+    activeJob = null;
     return;
   }
 
   // Prepare work directory
   const workDir = path.join(config.WORK_DIR, job.id);
   fs.mkdirSync(workDir, { recursive: true });
+  await appendRunLog(job.run_id, `Workdir prepared: ${workDir}`);
 
   try {
     const ctx: JudgeContext = {
@@ -107,7 +133,10 @@ async function processJob(job: JobRow) {
       },
     };
 
+    await appendRunLog(job.run_id, "Starting judge pipeline execution");
+
     const result = await pipeline.execute(ctx);
+    await appendRunLog(job.run_id, "Pipeline finished, uploading artifacts");
 
     // Upload artifacts to MinIO
     for (const artifact of result.artifacts) {
@@ -119,19 +148,23 @@ async function processJob(job: JobRow) {
          VALUES ($1, $2, $3, $4, $5)`,
         [job.run_id, job.submission_id, artifact.type, artifact.name, minioKey],
       );
+      await appendRunLog(job.run_id, `Artifact uploaded: ${artifact.name}`);
     }
 
     // Update results
+    const mergedLog = `${result.log}\n\n${stepLog("Results persisted")}`;
     await query(
       `UPDATE submission_runs
        SET status = 'completed', score = $1, max_score = $2,
-           test_results = $3, log = $4, finished_at = NOW()
+            test_results = $3,
+            log = COALESCE(log || E'\n\n', '') || $4,
+            finished_at = NOW()
        WHERE id = $5`,
       [
         result.score,
         result.maxScore,
         JSON.stringify(result.testResults),
-        result.log,
+        mergedLog,
         job.run_id,
       ],
     );
@@ -154,6 +187,7 @@ async function processJob(job: JobRow) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error(`[${config.WORKER_ID}] Job ${job.id} failed:`, message);
+    await appendRunLog(job.run_id, `Job failed: ${message}`);
     await failJob(job, message);
   } finally {
     // Cleanup work directory
@@ -162,6 +196,7 @@ async function processJob(job: JobRow) {
     } catch {
       // ignore cleanup errors
     }
+    activeJob = null;
   }
 }
 
@@ -180,7 +215,11 @@ async function failJob(job: JobRow, errorMessage: string) {
   );
 
   await query(
-    `UPDATE submission_runs SET status = $1, log = $2, finished_at = NOW() WHERE id = $3`,
+    `UPDATE submission_runs
+     SET status = $1,
+         log = COALESCE(log || E'\n', '') || $2,
+         finished_at = NOW()
+     WHERE id = $3`,
     [subStatus, errorMessage, job.run_id],
   );
 
@@ -188,6 +227,68 @@ async function failJob(job: JobRow, errorMessage: string) {
     subStatus,
     job.submission_id,
   ]);
+}
+
+async function recoverStaleJobs() {
+  const staleJobs = await queryMany<{
+    id: string;
+    run_id: string;
+    submission_id: string;
+  }>(
+    `SELECT id, run_id, submission_id
+     FROM judge_jobs
+     WHERE status IN ('locked', 'running')`,
+  );
+
+  if (staleJobs.length === 0) return;
+
+  const jobIds = staleJobs.map((j) => j.id);
+  const runIds = staleJobs.map((j) => j.run_id);
+  const submissionIds = staleJobs.map((j) => j.submission_id);
+
+  await query(
+    `UPDATE judge_jobs
+     SET status = 'pending', locked_by = NULL, locked_at = NULL, started_at = NULL
+     WHERE id = ANY($1::uuid[])`,
+    [jobIds],
+  );
+  await query(
+    `UPDATE submission_runs
+     SET status = 'pending', started_at = NULL,
+         log = COALESCE(log || E'\n', '') || $1
+     WHERE id = ANY($2::uuid[])`,
+    [stepLog("Recovered from stale worker interruption, re-queued"), runIds],
+  );
+  await query(
+    `UPDATE submissions
+     SET status = 'queued'
+     WHERE id = ANY($1::uuid[])`,
+    [submissionIds],
+  );
+
+  console.warn(
+    `[${config.WORKER_ID}] Recovered ${staleJobs.length} in-progress job(s) at startup and re-queued`,
+  );
+}
+
+async function gracefulShutdown(signal: string) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.warn(`[${config.WORKER_ID}] Received ${signal}, shutting down...`);
+
+  try {
+    if (activeJob) {
+      await failJob(
+        activeJob,
+        `Worker interrupted by ${signal}, job re-queued if retries remain`,
+      );
+    }
+    await pool.end();
+    process.exit(0);
+  } catch (err) {
+    console.error(`[${config.WORKER_ID}] Graceful shutdown failed:`, err);
+    process.exit(1);
+  }
 }
 
 // ─── Main loop ───────────────────────────────────────────
@@ -200,13 +301,7 @@ async function main() {
 
   fs.mkdirSync(config.WORK_DIR, { recursive: true });
 
-  // Clean stale locks on startup
-  await query(
-    `UPDATE judge_jobs
-     SET status = 'pending', locked_by = NULL, locked_at = NULL
-     WHERE status = 'locked'
-       AND locked_at < NOW() - INTERVAL '5 minutes'`,
-  );
+  await recoverStaleJobs();
 
   while (true) {
     try {
@@ -227,6 +322,14 @@ async function main() {
     }
   }
 }
+
+process.on("SIGINT", () => {
+  void gracefulShutdown("SIGINT");
+});
+
+process.on("SIGTERM", () => {
+  void gracefulShutdown("SIGTERM");
+});
 
 main().catch((err) => {
   console.error("Worker failed to start:", err);

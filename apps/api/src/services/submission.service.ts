@@ -23,6 +23,13 @@ interface FileRow {
   minio_key: string;
 }
 
+interface DownloadFileRow {
+  id: string;
+  submission_id: string;
+  path: string;
+  minio_key: string;
+}
+
 interface RunRow {
   id: string;
   submission_id: string;
@@ -281,4 +288,70 @@ export async function listByUser(userId: string, assignmentId: string) {
     fileCount: row.file_count,
     createdAt: row.created_at.toISOString(),
   }));
+}
+
+export async function getFileForDownload(fileId: string) {
+  const row = await queryOne<DownloadFileRow>(
+    `SELECT id, submission_id, path, minio_key
+     FROM submission_files
+     WHERE id = $1`,
+    [fileId],
+  );
+
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    submissionId: row.submission_id,
+    path: row.path,
+    minioKey: row.minio_key,
+  };
+}
+
+export async function rejudgeSubmission(submissionId: string) {
+  return transaction(async (client) => {
+    const submission = await client.query<{ id: string }>(
+      "SELECT id FROM submissions WHERE id = $1",
+      [submissionId],
+    );
+
+    if (submission.rows.length === 0) {
+      return { ok: false as const, reason: "not_found" as const };
+    }
+
+    const activeJob = await client.query<{ id: string }>(
+      `SELECT id
+       FROM judge_jobs
+       WHERE submission_id = $1
+         AND status IN ('pending', 'locked', 'running')
+       LIMIT 1`,
+      [submissionId],
+    );
+
+    if (activeJob.rows.length > 0) {
+      return { ok: false as const, reason: "already_queued" as const };
+    }
+
+    const runResult = await client.query<{ id: string }>(
+      `INSERT INTO submission_runs (submission_id, status)
+       VALUES ($1, 'pending')
+       RETURNING id`,
+      [submissionId],
+    );
+
+    const runId = runResult.rows[0]!.id;
+
+    await client.query(
+      `INSERT INTO judge_jobs (submission_id, run_id, status)
+       VALUES ($1, $2, 'pending')`,
+      [submissionId, runId],
+    );
+
+    await client.query(
+      "UPDATE submissions SET status = 'queued' WHERE id = $1",
+      [submissionId],
+    );
+
+    return { ok: true as const, runId };
+  });
 }

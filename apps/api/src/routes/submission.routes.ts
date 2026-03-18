@@ -1,7 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import { IdParam, PaginationQuery } from "@judge/shared";
-import { authenticate, requireRole } from "../middleware/auth.js";
-import { isStaff } from "@judge/shared";
+import { IdParam, PaginationQuery, isStaff } from "@judge/shared";
+import { authenticate } from "../middleware/auth.js";
 import * as submissionService from "../services/submission.service.js";
 import { getPresignedUrl } from "../utils/minio.js";
 import { MINIO_BUCKETS } from "@judge/shared";
@@ -86,6 +85,66 @@ export async function submissionRoutes(app: FastifyInstance) {
       }
 
       return detail;
+    },
+  );
+
+  // Download original submission file (admin only)
+  app.get(
+    "/api/submission-files/:id/download",
+    { preHandler: authenticate },
+    async (request, reply) => {
+      if (request.userRole !== "admin") {
+        return reply.status(403).send({ error: "Forbidden", statusCode: 403 });
+      }
+
+      const { id } = IdParam.parse(request.params);
+      const file = await submissionService.getFileForDownload(id);
+
+      if (!file) {
+        return reply.status(404).send({ error: "檔案不存在", statusCode: 404 });
+      }
+
+      const url = await getPresignedUrl(
+        MINIO_BUCKETS.SUBMISSIONS,
+        file.minioKey,
+      );
+      return { url, filename: file.path };
+    },
+  );
+
+  // Rejudge submission
+  app.post(
+    "/api/submissions/:id/rejudge",
+    { preHandler: authenticate },
+    async (request, reply) => {
+      const { id } = IdParam.parse(request.params);
+      const detail = await submissionService.getDetail(id);
+
+      if (!detail) {
+        return reply.status(404).send({ error: "提交不存在", statusCode: 404 });
+      }
+
+      if (request.userRole === "student" && detail.userId !== request.userId) {
+        return reply.status(403).send({ error: "Forbidden", statusCode: 403 });
+      }
+
+      const result = await submissionService.rejudgeSubmission(id);
+
+      if (!result.ok) {
+        if (result.reason === "not_found") {
+          return reply
+            .status(404)
+            .send({ error: "提交不存在", statusCode: 404 });
+        }
+
+        return reply
+          .status(409)
+          .send({ error: "此提交目前已在評測隊列中", statusCode: 409 });
+      }
+
+      return reply
+        .status(201)
+        .send({ message: "已重新排入評測", runId: result.runId });
     },
   );
 

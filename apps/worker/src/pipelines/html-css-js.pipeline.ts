@@ -124,7 +124,13 @@ export default defineConfig({
         stdout?: string;
         stderr?: string;
         message?: string;
+        code?: string;
       };
+      if (error.code === "ETIMEDOUT") {
+        throw new Error(
+          `[Docker execution]\nJudge timed out after ${Math.ceil(timeoutMs / 1000)}s\n${error.stdout ?? ""}\n${error.stderr ?? ""}`,
+        );
+      }
       return `[Docker execution]\n${error.stdout ?? ""}\n${error.stderr ?? ""}\n${error.message ?? ""}`;
     }
   }

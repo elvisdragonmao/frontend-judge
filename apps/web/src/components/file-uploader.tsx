@@ -10,6 +10,7 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,8 +26,54 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
     }
   }, [selectedFiles, onUpload]);
 
+  const handleDragOver = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!isLoading) {
+        setIsDragging(true);
+      }
+    },
+    [isLoading],
+  );
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      if (isLoading) return;
+
+      const files = Array.from(e.dataTransfer.files ?? []);
+      if (files.length > 0) {
+        setSelectedFiles(files);
+      }
+    },
+    [isLoading],
+  );
+
   return (
     <div className="space-y-4">
+      <div
+        className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+          isDragging ? "border-primary bg-primary/5" : "border-border"
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <p className="text-sm font-medium">拖曳檔案到這裡上傳</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          也可使用下方按鈕選擇檔案或資料夾
+        </p>
+      </div>
+
       <div className="flex gap-2">
         {/* Single / multiple file upload */}
         <input

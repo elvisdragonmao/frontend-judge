@@ -1,7 +1,11 @@
+import { useCallback, useState } from "react";
 import { useParams } from "react-router";
-import { useSubmissionDetail } from "@/hooks/use-api";
+import { useRejudgeSubmission, useSubmissionDetail } from "@/hooks/use-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/stores/auth";
+import { api } from "@/lib/api";
 
 function statusVariant(status: string) {
   switch (status) {
@@ -32,10 +36,38 @@ function statusLabel(status: string) {
 
 export function SubmissionDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const { data: submission, isLoading } = useSubmissionDetail(id!);
+  const rejudgeMutation = useRejudgeSubmission(id!);
+  const [downloadingFileId, setDownloadingFileId] = useState<string | null>(
+    null,
+  );
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  const handleDownloadFile = useCallback(async (fileId: string) => {
+    setDownloadError(null);
+    setDownloadingFileId(fileId);
+    try {
+      const result = await api.get<{ url: string }>(
+        `/submission-files/${fileId}/download`,
+      );
+      window.open(result.url, "_blank", "noopener,noreferrer");
+    } catch {
+      setDownloadError("下載失敗，請稍後再試");
+    } finally {
+      setDownloadingFileId(null);
+    }
+  }, []);
 
   if (isLoading) return <p className="text-muted-foreground">載入中...</p>;
   if (!submission) return <p className="text-muted-foreground">提交不存在</p>;
+
+  const isInQueue = ["pending", "queued", "running"].includes(
+    submission.status,
+  );
+  const canRejudge =
+    !!user && (user.role !== "student" || user.id === submission.userId);
+  const canDownloadFiles = user?.role === "admin";
 
   return (
     <div className="space-y-6">
@@ -46,6 +78,27 @@ export function SubmissionDetailPage() {
           {new Date(submission.createdAt).toLocaleString("zh-TW")}
         </p>
       </div>
+
+      {canRejudge && (
+        <div className="flex items-center gap-3">
+          <Button
+            size="sm"
+            onClick={() => rejudgeMutation.mutate()}
+            disabled={rejudgeMutation.isPending || isInQueue}
+          >
+            {rejudgeMutation.isPending ? "重新排測中..." : "重新測試"}
+          </Button>
+          {isInQueue && (
+            <p className="text-xs text-muted-foreground">目前已在評測隊列中</p>
+          )}
+          {rejudgeMutation.isSuccess && (
+            <p className="text-xs text-green-600">已重新排入評測</p>
+          )}
+          {rejudgeMutation.isError && (
+            <p className="text-xs text-destructive">重新測試失敗，請稍後再試</p>
+          )}
+        </div>
+      )}
 
       {/* Overview */}
       <div className="flex items-center gap-4">
@@ -68,13 +121,28 @@ export function SubmissionDetailPage() {
           <CardTitle className="text-base">上傳檔案</CardTitle>
         </CardHeader>
         <CardContent>
+          {downloadError && (
+            <p className="mb-2 text-xs text-destructive">{downloadError}</p>
+          )}
           <div className="space-y-1">
             {submission.files.map((file) => (
               <div
                 key={file.id}
                 className="flex items-center justify-between text-sm"
               >
-                <span className="font-mono text-xs">{file.path}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs">{file.path}</span>
+                  {canDownloadFiles && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDownloadFile(file.id)}
+                      disabled={downloadingFileId === file.id}
+                    >
+                      {downloadingFileId === file.id ? "下載中..." : "下載"}
+                    </Button>
+                  )}
+                </div>
                 <span className="text-muted-foreground">
                   {(file.size / 1024).toFixed(1)} KB
                 </span>
@@ -147,6 +215,12 @@ export function SubmissionDetailPage() {
             {run.log && (
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">Log</h4>
+                {run.log.includes("ETIMEDOUT") && (
+                  <p className="text-xs text-amber-600">
+                    此次評測在容器內逾時，通常是 npm install/build
+                    太久或程式卡住。
+                  </p>
+                )}
                 <pre className="max-h-60 overflow-auto rounded bg-muted p-3 text-xs">
                   {run.log}
                 </pre>

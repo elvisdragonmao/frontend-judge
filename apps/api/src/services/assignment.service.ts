@@ -121,73 +121,81 @@ export async function create(data: CreateAssignmentRequest, createdBy: string) {
 }
 
 export async function update(id: string, data: UpdateAssignmentRequest) {
-  const sets: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  await transaction(async (client) => {
+    const sets: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
 
-  if (data.title !== undefined) {
-    sets.push(`title = $${idx++}`);
-    params.push(data.title);
-  }
-  if (data.description !== undefined) {
-    sets.push(`description = $${idx++}`);
-    params.push(data.description);
-  }
-  if (data.type !== undefined) {
-    sets.push(`type = $${idx++}`);
-    params.push(data.type);
-  }
-  if (data.dueDate !== undefined) {
-    sets.push(`due_date = $${idx++}`);
-    params.push(data.dueDate);
-  }
-  if (data.allowMultipleSubmissions !== undefined) {
-    sets.push(`allow_multiple_submissions = $${idx++}`);
-    params.push(data.allowMultipleSubmissions);
-  }
-
-  if (sets.length > 0) {
-    params.push(id);
-    await query(
-      `UPDATE assignments SET ${sets.join(", ")} WHERE id = $${idx}`,
-      params,
-    );
-  }
-
-  if (data.spec) {
-    const specSets: string[] = [];
-    const specParams: unknown[] = [];
-    let specIdx = 1;
-
-    if (data.spec.startCommand !== undefined) {
-      specSets.push(`start_command = $${specIdx++}`);
-      specParams.push(data.spec.startCommand);
+    if (data.title !== undefined) {
+      sets.push(`title = $${idx++}`);
+      params.push(data.title);
     }
-    if (data.spec.testContent !== undefined) {
-      specSets.push(`test_content = $${specIdx++}`);
-      specParams.push(data.spec.testContent);
+    if (data.description !== undefined) {
+      sets.push(`description = $${idx++}`);
+      params.push(data.description);
     }
-    if (data.spec.timeoutMs !== undefined) {
-      specSets.push(`timeout_ms = $${specIdx++}`);
-      specParams.push(data.spec.timeoutMs);
+    if (data.type !== undefined) {
+      sets.push(`type = $${idx++}`);
+      params.push(data.type);
     }
-    if (data.spec.allowedPaths !== undefined) {
-      specSets.push(`allowed_paths = $${specIdx++}`);
-      specParams.push(data.spec.allowedPaths);
+    if (data.dueDate !== undefined) {
+      sets.push(`due_date = $${idx++}`);
+      params.push(data.dueDate);
     }
-    if (data.spec.blockedPaths !== undefined) {
-      specSets.push(`blocked_paths = $${specIdx++}`);
-      specParams.push(data.spec.blockedPaths);
+    if (data.allowMultipleSubmissions !== undefined) {
+      sets.push(`allow_multiple_submissions = $${idx++}`);
+      params.push(data.allowMultipleSubmissions);
     }
 
-    if (specSets.length > 0) {
-      specParams.push(id);
-      await query(
-        `UPDATE assignment_specs SET ${specSets.join(", ")} WHERE assignment_id = $${specIdx}`,
-        specParams,
+    if (sets.length > 0) {
+      params.push(id);
+      await client.query(
+        `UPDATE assignments SET ${sets.join(", ")} WHERE id = $${idx}`,
+        params,
       );
     }
-  }
+
+    if (data.spec) {
+      const specSets: string[] = [];
+      const specParams: unknown[] = [];
+      let specIdx = 1;
+
+      if (data.spec.startCommand !== undefined) {
+        specSets.push(`start_command = $${specIdx++}`);
+        specParams.push(data.spec.startCommand);
+      }
+      if (data.spec.testContent !== undefined) {
+        specSets.push(`test_content = $${specIdx++}`);
+        specParams.push(data.spec.testContent);
+      }
+      if (data.spec.timeoutMs !== undefined) {
+        specSets.push(`timeout_ms = $${specIdx++}`);
+        specParams.push(data.spec.timeoutMs);
+      }
+      if (data.spec.allowedPaths !== undefined) {
+        specSets.push(`allowed_paths = $${specIdx++}`);
+        specParams.push(data.spec.allowedPaths);
+      }
+      if (data.spec.blockedPaths !== undefined) {
+        specSets.push(`blocked_paths = $${specIdx++}`);
+        specParams.push(data.spec.blockedPaths);
+      }
+
+      if (specSets.length > 0) {
+        specParams.push(id);
+        await client.query(
+          `UPDATE assignment_specs SET ${specSets.join(", ")} WHERE assignment_id = $${specIdx}`,
+          specParams,
+        );
+      }
+    }
+
+    if (data.submissionRecordAction === "delete") {
+      await client.query("DELETE FROM submissions WHERE assignment_id = $1", [
+        id,
+      ]);
+    }
+  });
 }
 
 export async function deleteAssignment(id: string) {

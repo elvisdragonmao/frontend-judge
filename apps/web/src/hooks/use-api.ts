@@ -135,6 +135,18 @@ export function useCreateAssignment() {
   });
 }
 
+export function useUpdateAssignment(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: unknown) => api.patch(`/assignments/${id}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.assignmentDetail(id) });
+      qc.invalidateQueries({ queryKey: ["assignments"] });
+      qc.invalidateQueries({ queryKey: ["submissions"] });
+    },
+  });
+}
+
 // ─── Submissions ─────────────────────────────────────────
 export function useSubmissions(assignmentId: string, page = 1) {
   return useQuery({
@@ -152,6 +164,22 @@ export function useSubmissionDetail(id: string) {
     queryKey: queryKeys.submissionDetail(id),
     queryFn: () => api.get<SubmissionDetail>(`/submissions/${id}`),
     enabled: !!id,
+  });
+}
+
+export function useRejudgeSubmission(submissionId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      api.post<{ message: string; runId: string }>(
+        `/submissions/${submissionId}/rejudge`,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: queryKeys.submissionDetail(submissionId),
+      });
+      qc.invalidateQueries({ queryKey: ["submissions"] });
+    },
   });
 }
 
