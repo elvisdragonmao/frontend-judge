@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router";
 
 export function AdminPage() {
   const [page, setPage] = useState(1);
@@ -210,6 +211,26 @@ export function AdminPage() {
                     </p>
                   </div>
                   <Badge variant="outline">{user.role}</Badge>
+                  {/* Show classes */}
+                  {user.classes && user.classes.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      {user.classes.map((cls) => (
+                        <Link key={cls.id} to={`/classes/${cls.id}`}>
+                          <Badge
+                            variant="secondary"
+                            className="cursor-pointer hover:bg-secondary/80"
+                          >
+                            {cls.name}
+                          </Badge>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                  {user.classes && user.classes.length === 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      未加入班級
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {resetUserId === user.id ? (

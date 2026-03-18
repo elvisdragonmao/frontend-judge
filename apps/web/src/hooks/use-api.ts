@@ -89,6 +89,26 @@ export function useCreateClass() {
   });
 }
 
+export function useAddClassMembers(classId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userIds: string[]) =>
+      api.post<MessageResponse>(`/classes/${classId}/members`, { userIds }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.classDetail(classId) }),
+  });
+}
+
+export function useRemoveClassMember(classId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      api.delete<MessageResponse>(`/classes/${classId}/members`, { userId }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.classDetail(classId) }),
+  });
+}
+
 // ─── Assignments ─────────────────────────────────────────
 export function useAssignments(classId: string) {
   return useQuery({

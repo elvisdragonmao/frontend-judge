@@ -1,10 +1,17 @@
 import { z } from "zod";
 
+export const UserClassInfo = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+});
+export type UserClassInfo = z.infer<typeof UserClassInfo>;
+
 export const UserSummary = z.object({
   id: z.string().uuid(),
   username: z.string(),
   displayName: z.string(),
   role: z.enum(["admin", "teacher", "student"]),
+  classes: z.array(UserClassInfo).default([]),
   createdAt: z.string().datetime(),
 });
 export type UserSummary = z.infer<typeof UserSummary>;

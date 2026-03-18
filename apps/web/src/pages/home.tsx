@@ -7,7 +7,7 @@ export function HomePage() {
 
   return (
     <div className="flex flex-col items-center py-20">
-      <h1 className="text-4xl font-bold">Frontend Judge</h1>
+      <h1 className="text-4xl font-bold">emjudge</h1>
       <p className="mt-4 max-w-lg text-center text-lg text-muted-foreground">
         前端作業繳交與自動評測平台。上傳你的 HTML / CSS / JS 或 React 作業，
         系統會自動執行 Playwright 測試並產出分數、截圖與評測報告。

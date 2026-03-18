@@ -5,7 +5,7 @@
     "dev:api": "pnpm --filter @judge/api dev",
     "dev:web": "pnpm --filter @judge/web dev",
     "dev:worker": "pnpm --filter @judge/worker dev",
-    "dev": "pnpm run --parallel dev:api dev:web",
+    "dev": "pnpm --filter @judge/api --filter @judge/web -r --parallel dev",
     "build": "pnpm run -r build",
     "lint": "pnpm run -r lint",
     "db:migrate": "pnpm --filter @judge/api db:migrate",

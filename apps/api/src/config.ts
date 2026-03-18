@@ -21,6 +21,8 @@ const EnvSchema = z.object({
     .default("false"),
 
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
+
+  DEFAULT_ADMIN_PASSWORD: z.string().default("admin123"),
 });
 
 export const config = EnvSchema.parse(process.env);

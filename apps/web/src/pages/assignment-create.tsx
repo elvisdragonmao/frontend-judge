@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useCreateAssignment } from "@/hooks/use-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
+import { TestTemplatePicker } from "@/components/test-template-picker";
 
 export function AssignmentCreatePage() {
   const { classId } = useParams<{ classId: string }>();
@@ -18,6 +19,28 @@ export function AssignmentCreatePage() {
   const [allowMultiple, setAllowMultiple] = useState(true);
   const [testContent, setTestContent] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+
+  const handleApplyTemplate = useCallback(
+    (code: string) => {
+      if (code.startsWith("\n") && testContent) {
+        // Append mode: merge imports and append tests
+        const existing = testContent;
+        const newCode = code.trimStart();
+
+        // Remove duplicate import lines from the new code
+        const newLines = newCode.split("\n");
+        const filtered = newLines.filter(
+          (line) =>
+            !line.startsWith("import ") || !existing.includes(line.trim()),
+        );
+        setTestContent(existing + "\n" + filtered.join("\n"));
+      } else {
+        setTestContent(code);
+      }
+    },
+    [testContent],
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,16 +168,38 @@ export function AssignmentCreatePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">測試規格</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">測試規格</CardTitle>
+              <Button
+                type="button"
+                variant={showTemplatePicker ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowTemplatePicker(!showTemplatePicker)}
+              >
+                {showTemplatePicker ? "收起模板" : "使用測試模板"}
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Template picker */}
+            {showTemplatePicker && (
+              <TestTemplatePicker
+                assignmentType={type}
+                onApply={handleApplyTemplate}
+              />
+            )}
+
+            {/* Manual editor */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Playwright 測試腳本</label>
+              <p className="text-xs text-muted-foreground">
+                可從上方模板產生，或自行撰寫。支援「覆蓋套用」（取代目前內容）與「追加套用」（合併到現有腳本後面）。
+              </p>
               <textarea
                 value={testContent}
                 onChange={(e) => setTestContent(e.target.value)}
                 placeholder={`import { test, expect } from '@playwright/test';\n\ntest('頁面標題正確', async ({ page }) => {\n  await page.goto('/');\n  await expect(page).toHaveTitle(/My Page/);\n});`}
-                className="min-h-[200px] w-full rounded-md border border-border bg-transparent px-3 py-2 font-mono text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="min-h-[250px] w-full rounded-md border border-border bg-transparent px-3 py-2 font-mono text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
             </div>
           </CardContent>

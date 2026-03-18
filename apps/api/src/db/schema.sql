@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════
--- Frontend Judge Platform — PostgreSQL Schema
+-- emjudge Platform — PostgreSQL Schema
 -- ═══════════════════════════════════════════════════════════
 
 -- Extensions

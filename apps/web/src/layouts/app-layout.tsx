@@ -19,7 +19,7 @@ export function AppLayout() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-6">
             <Link to="/" className="text-lg font-bold">
-              Frontend Judge
+              emjudge
             </Link>
             {user && (
               <nav className="flex items-center gap-4 text-sm">

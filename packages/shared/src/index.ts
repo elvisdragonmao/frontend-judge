@@ -9,3 +9,6 @@ export * from "./schemas/user.js";
 export * from "./schemas/class.js";
 export * from "./schemas/assignment.js";
 export * from "./schemas/submission.js";
+
+// Test templates
+export * from "./test-templates.js";

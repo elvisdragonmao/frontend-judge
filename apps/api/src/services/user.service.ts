@@ -13,12 +13,18 @@ interface UserRow {
   updated_at: Date;
 }
 
-function toSummary(row: UserRow) {
+interface UserClassRow {
+  id: string;
+  name: string;
+}
+
+function toSummary(row: UserRow, classes: UserClassRow[] = []) {
   return {
     id: row.id,
     username: row.username,
     displayName: row.display_name,
     role: row.role as "admin" | "teacher" | "student",
+    classes: classes.map((c) => ({ id: c.id, name: c.name })),
     createdAt: row.created_at.toISOString(),
   };
 }
@@ -48,8 +54,33 @@ export async function listUsers(page: number, limit: number) {
       "SELECT COUNT(*) as count FROM users WHERE is_active = true",
     ),
   ]);
+
+  // Batch-fetch class memberships for all returned users
+  const userIds = rows.map((r) => r.id);
+  let classMap = new Map<string, UserClassRow[]>();
+  if (userIds.length > 0) {
+    const placeholders = userIds.map((_, i) => `$${i + 1}`).join(", ");
+    const classRows = await queryMany<{
+      user_id: string;
+      class_id: string;
+      class_name: string;
+    }>(
+      `SELECT cm.user_id, c.id AS class_id, c.name AS class_name
+       FROM class_members cm
+       JOIN classes c ON c.id = cm.class_id
+       WHERE cm.user_id IN (${placeholders})
+       ORDER BY c.name`,
+      userIds,
+    );
+    for (const row of classRows) {
+      const list = classMap.get(row.user_id) ?? [];
+      list.push({ id: row.class_id, name: row.class_name });
+      classMap.set(row.user_id, list);
+    }
+  }
+
   return {
-    users: rows.map(toSummary),
+    users: rows.map((row) => toSummary(row, classMap.get(row.id) ?? [])),
     total: parseInt(countResult?.count ?? "0", 10),
   };
 }
