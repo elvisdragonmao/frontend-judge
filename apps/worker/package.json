@@ -1,0 +1,23 @@
+{
+  "name": "@judge/worker",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@judge/shared": "workspace:*",
+    "minio": "^8.0.5",
+    "pg": "^8.16.0",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@judge/config": "workspace:*",
+    "@types/pg": "^8.15.4",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.3"
+  }
+}

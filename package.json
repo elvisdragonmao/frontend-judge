@@ -1,0 +1,25 @@
+{
+  "private": true,
+  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be",
+  "scripts": {
+    "dev:api": "pnpm --filter @judge/api dev",
+    "dev:web": "pnpm --filter @judge/web dev",
+    "dev:worker": "pnpm --filter @judge/worker dev",
+    "dev": "pnpm run --parallel dev:api dev:web",
+    "build": "pnpm run -r build",
+    "lint": "pnpm run -r lint",
+    "db:migrate": "pnpm --filter @judge/api db:migrate",
+    "db:seed": "pnpm --filter @judge/api db:seed"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "bcrypt",
+      "esbuild"
+    ]
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "prettier-plugin-packagejson": "^3.0.2"
+  }
+}
