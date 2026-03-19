@@ -12,7 +12,7 @@ const EnvSchema = z.object({
   JWT_EXPIRES_IN: z.string().default("7d"),
 
   MINIO_ENDPOINT: z.string().default("localhost"),
-  MINIO_PORT: z.coerce.number().default(9000),
+  MINIO_PORT: z.preprocess((v) => v || "9000", z.coerce.number()).default(9000),
   MINIO_ACCESS_KEY: z.string().default("minioadmin"),
   MINIO_SECRET_KEY: z.string().default("minioadmin"),
   MINIO_USE_SSL: z
