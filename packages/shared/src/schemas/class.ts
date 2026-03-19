@@ -38,11 +38,11 @@ export const RemoveClassMemberRequest = z.object({
 });
 export type RemoveClassMemberRequest = z.infer<typeof RemoveClassMemberRequest>;
 
-export const ClassLeaderboardEntry = z.object({
-  userId: z.string().uuid(),
-  username: z.string(),
-  displayName: z.string(),
+export const ClassCumulativeScorePoint = z.object({
+  date: z.string(),
   totalScore: z.number(),
-  scoredAssignments: z.number().int().nonnegative(),
+  assignmentTitle: z.string(),
 });
-export type ClassLeaderboardEntry = z.infer<typeof ClassLeaderboardEntry>;
+export type ClassCumulativeScorePoint = z.infer<
+  typeof ClassCumulativeScorePoint
+>;

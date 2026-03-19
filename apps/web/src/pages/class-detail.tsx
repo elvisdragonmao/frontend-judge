@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, Link } from "react-router";
 import {
   useClassDetail,
-  useClassLeaderboard,
+  useClassScoreHistory,
   useAssignments,
   useUsers,
   useAddClassMembers,
@@ -21,7 +21,7 @@ export function ClassDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { data: cls, isLoading } = useClassDetail(id!);
-  const { data: leaderboard } = useClassLeaderboard(id!);
+  const { data: scoreHistory } = useClassScoreHistory(id!);
   const { data: assignments } = useAssignments(id!);
 
   const addMembersMutation = useAddClassMembers(id!);
@@ -85,11 +85,11 @@ export function ClassDetailPage() {
         )}
       </div>
 
-      {/* Leaderboard */}
-      {leaderboard && leaderboard.length > 0 && (
+      {/* Score chart */}
+      {scoreHistory && scoreHistory.length > 0 && (
         <Card>
           <CardContent className="pt-6">
-            <ScoreChart data={leaderboard} />
+            <ScoreChart data={scoreHistory} />
           </CardContent>
         </Card>
       )}

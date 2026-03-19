@@ -46,8 +46,7 @@ export async function getPresignedUrl(
     const parsed = new URL(url);
     const bucketPath = `/${bucket}`;
     if (parsed.pathname.startsWith(bucketPath)) {
-      parsed.pathname = `${base}${parsed.pathname}`;
-      return parsed.toString();
+      return `${base}${parsed.pathname}${parsed.search}`;
     }
     return url;
   }

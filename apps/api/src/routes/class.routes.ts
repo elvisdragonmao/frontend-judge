@@ -44,9 +44,9 @@ export async function classRoutes(app: FastifyInstance) {
     },
   );
 
-  // Get cumulative class leaderboard
+  // Get cumulative class score history
   app.get(
-    "/api/classes/:id/leaderboard",
+    "/api/classes/:id/score-history",
     { preHandler: authenticate },
     async (request, reply) => {
       const { id } = IdParam.parse(request.params);
@@ -60,7 +60,7 @@ export async function classRoutes(app: FastifyInstance) {
         }
       }
 
-      return classService.getClassLeaderboard(id);
+      return classService.getClassScoreHistory(id);
     },
   );
 

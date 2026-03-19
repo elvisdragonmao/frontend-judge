@@ -1,31 +1,32 @@
 import { useEffect, useRef } from "react";
 import * as echarts from "echarts/core";
-import { BarChart } from "echarts/charts";
+import { LineChart } from "echarts/charts";
 import {
   TitleComponent,
   TooltipComponent,
   GridComponent,
+  LegendComponent,
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
-import type { ClassLeaderboardEntry } from "@judge/shared";
+import type { ClassCumulativeScorePoint } from "@judge/shared";
 
 echarts.use([
-  BarChart,
+  LineChart,
   TitleComponent,
   TooltipComponent,
   GridComponent,
+  LegendComponent,
   CanvasRenderer,
 ]);
 
 interface ScoreChartProps {
-  data: ClassLeaderboardEntry[];
+  data: ClassCumulativeScorePoint[];
   className?: string;
 }
 
 export function ScoreChart({ data, className }: ScoreChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<echarts.ECharts | null>(null);
-  const chartHeight = Math.max(300, data.length * 44 + 96);
 
   useEffect(() => {
     if (!chartRef.current) return;
@@ -35,61 +36,53 @@ export function ScoreChart({ data, className }: ScoreChartProps) {
 
     const option: echarts.EChartsCoreOption = {
       title: {
-        text: "班級累積分數排行榜",
+        text: "班級累積分數變化",
         left: "center",
         textStyle: { fontSize: 14, fontWeight: 500 },
       },
       tooltip: {
-        trigger: "item",
+        trigger: "axis",
         formatter: (params: unknown) => {
-          const item = params as {
-            name: string;
+          const list = params as Array<{
+            axisValueLabel: string;
             value: number;
-            data: ClassLeaderboardEntry;
-            dataIndex: number;
-          };
-
-          return [
-            `第 ${item.dataIndex + 1} 名：${item.name}`,
-            `累積分數：${item.value}`,
-            `有成績作業數：${item.data.scoredAssignments}`,
-            `帳號：@${item.data.username}`,
-          ].join("<br/>");
+            data: { assignmentTitle: string };
+          }>;
+          const item = list[0];
+          if (!item) return "";
+          return `${item.axisValueLabel}<br/>班級累積分數：${item.value}<br/>最新成長作業：${item.data.assignmentTitle}`;
         },
       },
       grid: {
         left: "3%",
         right: "4%",
         bottom: "3%",
-        top: 48,
         containLabel: true,
       },
       xAxis: {
-        type: "value",
-        minInterval: 1,
+        type: "category",
+        data: data.map((d) => d.date),
+        axisLabel: { rotate: 30 },
       },
       yAxis: {
-        type: "category",
-        data: data.map((d) => `${d.displayName} (@${d.username})`),
-        inverse: true,
-        axisLabel: {
-          interval: 0,
-        },
+        type: "value",
+        min: 0,
       },
       series: [
         {
-          type: "bar",
+          type: "line",
           data: data.map((d) => ({
-            ...d,
             value: d.totalScore,
-            name: `${d.displayName} (@${d.username})`,
+            assignmentTitle: d.assignmentTitle,
           })),
-          barMaxWidth: 28,
+          smooth: true,
+          lineStyle: { width: 3 },
           itemStyle: { color: "#3b82f6" },
-          label: {
-            show: true,
-            position: "right",
-            formatter: "{c}",
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: "rgba(59, 130, 246, 0.32)" },
+              { offset: 1, color: "rgba(59, 130, 246, 0.05)" },
+            ]),
           },
         },
       ],
@@ -106,7 +99,5 @@ export function ScoreChart({ data, className }: ScoreChartProps) {
     };
   }, [data]);
 
-  return (
-    <div ref={chartRef} className={className} style={{ height: chartHeight }} />
-  );
+  return <div ref={chartRef} className={className} style={{ height: 300 }} />;
 }
