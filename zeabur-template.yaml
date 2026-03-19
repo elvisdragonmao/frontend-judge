@@ -355,7 +355,9 @@ spec:
 
                 handle /img/* {
                   uri strip_prefix /img
-                  reverse_proxy ${MINIO_HOST}:${MINIO_PORT}
+                  reverse_proxy ${MINIO_HOST}:${MINIO_PORT} {
+                    header_up Host {upstream_hostport}
+                  }
                 }
 
                 handle {
