@@ -28,11 +28,7 @@ export function AssignmentDetailPage() {
     (files: File[]) => {
       const formData = new FormData();
       for (const file of files) {
-        formData.append("file", file, file.name);
-        // Send relative path for folder uploads
-        if (file.webkitRelativePath) {
-          formData.append("relativePath", file.webkitRelativePath);
-        }
+        formData.append("file", file, file.webkitRelativePath || file.name);
       }
       submitMutation.mutate(formData);
     },

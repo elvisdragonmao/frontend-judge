@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { normalizeSubmissionPath, shouldIgnoreUploadPath } from "@judge/shared";
 import { Button } from "@/components/ui/button";
 
 interface FileUploaderProps {
@@ -10,14 +11,29 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [ignoredCount, setIgnoredCount] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isPickerMenuOpen, setIsPickerMenuOpen] = useState(false);
+
+  const collectAcceptedFiles = useCallback((files: File[]) => {
+    const accepted = files.filter((file) => {
+      const normalizedPath = normalizeSubmissionPath(
+        file.webkitRelativePath || file.name,
+      );
+      return normalizedPath ? !shouldIgnoreUploadPath(normalizedPath) : false;
+    });
+
+    setIgnoredCount(files.length - accepted.length);
+    setSelectedFiles(accepted);
+  }, []);
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files ?? []);
-      setSelectedFiles(files);
+      collectAcceptedFiles(files);
+      setIsPickerMenuOpen(false);
     },
-    [],
+    [collectAcceptedFiles],
   );
 
   const handleSubmit = useCallback(() => {
@@ -52,10 +68,10 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
 
       const files = Array.from(e.dataTransfer.files ?? []);
       if (files.length > 0) {
-        setSelectedFiles(files);
+        collectAcceptedFiles(files);
       }
     },
-    [isLoading],
+    [collectAcceptedFiles, isLoading],
   );
 
   return (
@@ -74,7 +90,7 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
         </p>
       </div>
 
-      <div className="flex gap-2">
+      <div className="relative flex gap-2">
         {/* Single / multiple file upload */}
         <input
           ref={fileInputRef}
@@ -86,11 +102,40 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => setIsPickerMenuOpen((open) => !open)}
           disabled={isLoading}
         >
-          選擇檔案
+          選擇檔案或資料夾
         </Button>
+
+        {isPickerMenuOpen && !isLoading && (
+          <div className="absolute top-full z-10 mt-2 min-w-44 rounded-md border bg-background p-1 shadow-md">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start"
+              onClick={() => {
+                setIsPickerMenuOpen(false);
+                fileInputRef.current?.click();
+              }}
+            >
+              選擇檔案
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start"
+              onClick={() => {
+                setIsPickerMenuOpen(false);
+                folderInputRef.current?.click();
+              }}
+            >
+              選擇資料夾
+            </Button>
+          </div>
+        )}
 
         {/* Folder upload */}
         <input
@@ -104,14 +149,6 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
           className="hidden"
           onChange={handleFileChange}
         />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => folderInputRef.current?.click()}
-          disabled={isLoading}
-        >
-          選擇資料夾
-        </Button>
       </div>
 
       {selectedFiles.length > 0 && (
@@ -133,6 +170,13 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
             {isLoading ? "上傳中..." : "提交作業"}
           </Button>
         </div>
+      )}
+
+      {ignoredCount > 0 && (
+        <p className="text-xs text-muted-foreground">
+          已自動忽略 {ignoredCount} 個檔案（例如 `node_modules`、`dist`、
+          `build`）。
+        </p>
       )}
     </div>
   );

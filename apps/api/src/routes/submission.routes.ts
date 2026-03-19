@@ -1,9 +1,15 @@
 import type { FastifyInstance } from "fastify";
-import { IdParam, PaginationQuery, isStaff } from "@judge/shared";
+import {
+  IdParam,
+  isStaff,
+  MINIO_BUCKETS,
+  normalizeSubmissionPath,
+  PaginationQuery,
+  shouldIgnoreUploadPath,
+} from "@judge/shared";
 import { authenticate } from "../middleware/auth.js";
 import * as submissionService from "../services/submission.service.js";
 import { getPresignedUrl } from "../utils/minio.js";
-import { MINIO_BUCKETS } from "@judge/shared";
 
 export async function submissionRoutes(app: FastifyInstance) {
   // Upload submission (student only)
@@ -19,12 +25,13 @@ export async function submissionRoutes(app: FastifyInstance) {
 
       for await (const part of parts) {
         if (part.type === "file") {
+          const normalizedPath = normalizeSubmissionPath(part.filename);
+          if (!normalizedPath || shouldIgnoreUploadPath(normalizedPath)) {
+            continue;
+          }
+
           const buffer = await part.toBuffer();
-          // Use the filename field; for folder uploads the browser sends the relative path
-          const filePath =
-            (part.fields as Record<string, { value?: string }>)?.relativePath
-              ?.value || part.filename;
-          files.push({ path: filePath, buffer });
+          files.push({ path: normalizedPath, buffer });
         }
       }
 

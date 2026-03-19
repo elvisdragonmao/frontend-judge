@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  DEFAULT_BLOCKED_PATHS,
+  DEFAULT_REACT_ALLOWED_PATHS,
+  DEFAULT_REACT_BLOCKED_PATHS,
+} from "../submission-paths.js";
 
 export const AssignmentSpec = z.object({
   /** How to start the project for judging (e.g. 'static', 'npm-start') */
@@ -10,11 +15,16 @@ export const AssignmentSpec = z.object({
   /** Files allowed to be overwritten by student submission */
   allowedPaths: z.array(z.string()).default(["**/*"]),
   /** Files student cannot override (security) */
-  blockedPaths: z
-    .array(z.string())
-    .default(["package.json", "Dockerfile", "*.sh", "node_modules/**", ".env"]),
+  blockedPaths: z.array(z.string()).default([...DEFAULT_BLOCKED_PATHS]),
 });
 export type AssignmentSpec = z.infer<typeof AssignmentSpec>;
+
+export const DEFAULT_REACT_ASSIGNMENT_SPEC = {
+  startCommand: "npm-start",
+  timeoutMs: 60_000,
+  allowedPaths: [...DEFAULT_REACT_ALLOWED_PATHS],
+  blockedPaths: [...DEFAULT_REACT_BLOCKED_PATHS],
+} as const;
 
 export const SubmissionRecordAction = z.enum(["keep", "delete"]);
 export type SubmissionRecordAction = z.infer<typeof SubmissionRecordAction>;

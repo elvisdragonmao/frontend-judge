@@ -1,7 +1,11 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { MINIO_BUCKETS } from "@judge/shared";
+import {
+  isSubmissionPathAllowed,
+  MINIO_BUCKETS,
+  normalizeSubmissionPath,
+} from "@judge/shared";
 import { downloadFile } from "../minio.js";
 import { queryMany } from "../db.js";
 import { config } from "../config.js";
@@ -45,17 +49,23 @@ export class ReactPipeline implements JudgePipeline {
       [submissionId],
     );
 
-    const blocked = new Set(spec.blockedPaths);
-
     for (const file of files) {
-      // Security: skip blocked paths
+      const normalizedPath = normalizeSubmissionPath(file.path);
+      if (!normalizedPath) {
+        continue;
+      }
+
       if (
-        blocked.has(file.path) ||
-        this.isBlocked(file.path, spec.blockedPaths)
+        !isSubmissionPathAllowed(
+          normalizedPath,
+          spec.allowedPaths,
+          spec.blockedPaths,
+        )
       ) {
         continue;
       }
-      const dest = path.join(projectDir, file.path);
+
+      const dest = path.join(projectDir, normalizedPath);
       fs.mkdirSync(path.dirname(dest), { recursive: true });
       await downloadFile(MINIO_BUCKETS.SUBMISSIONS, file.minio_key, dest);
     }
@@ -104,22 +114,6 @@ export default defineConfig({
     return this.parseResults(workDir, log, artifactsDir);
   }
 
-  private isBlocked(filePath: string, blockedPaths: string[]): boolean {
-    for (const pattern of blockedPaths) {
-      if (pattern.endsWith("/**")) {
-        const prefix = pattern.slice(0, -3);
-        if (filePath.startsWith(prefix)) return true;
-      }
-      if (filePath === pattern) return true;
-      // Simple glob: *.sh
-      if (pattern.startsWith("*")) {
-        const ext = pattern.slice(1);
-        if (filePath.endsWith(ext)) return true;
-      }
-    }
-    return false;
-  }
-
   private runInDocker(
     workDir: string,
     timeoutMs: number,
@@ -137,6 +131,8 @@ export default defineConfig({
         `${workDir}:/work`,
         "-w",
         "/work",
+        "-e",
+        "NODE_PATH=/usr/lib/node_modules",
         config.JUDGE_IMAGE,
         "sh",
         "-c",

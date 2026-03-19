@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { DEFAULT_REACT_ASSIGNMENT_SPEC } from "@judge/shared";
 import { useNavigate, useParams } from "react-router";
 import { useAssignmentDetail, useUpdateAssignment } from "@/hooks/use-api";
 import { PageTitle } from "@/components/page-title";
@@ -69,17 +70,17 @@ export function AssignmentEditPage() {
         allowMultipleSubmissions: allowMultiple,
         submissionRecordAction,
         spec: {
-          startCommand: type === "react" ? "npm-start" : "static",
+          startCommand:
+            type === "react"
+              ? DEFAULT_REACT_ASSIGNMENT_SPEC.startCommand
+              : "static",
           testContent: testContent || undefined,
           timeoutMs: 60_000,
-          allowedPaths: ["**/*"],
-          blockedPaths: [
-            "package.json",
-            "Dockerfile",
-            "*.sh",
-            "node_modules/**",
-            ".env",
-          ],
+          allowedPaths:
+            type === "react"
+              ? [...DEFAULT_REACT_ASSIGNMENT_SPEC.allowedPaths]
+              : ["**/*"],
+          blockedPaths: [...DEFAULT_REACT_ASSIGNMENT_SPEC.blockedPaths],
         },
       },
       {

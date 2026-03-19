@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { DEFAULT_REACT_ASSIGNMENT_SPEC } from "@judge/shared";
 import { useParams, useNavigate } from "react-router";
 import { useCreateAssignment } from "@/hooks/use-api";
 import { PageTitle } from "@/components/page-title";
@@ -54,17 +55,17 @@ export function AssignmentCreatePage() {
         dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
         allowMultipleSubmissions: allowMultiple,
         spec: {
-          startCommand: type === "react" ? "npm-start" : "static",
+          startCommand:
+            type === "react"
+              ? DEFAULT_REACT_ASSIGNMENT_SPEC.startCommand
+              : "static",
           testContent: testContent || undefined,
           timeoutMs: 60_000,
-          allowedPaths: ["**/*"],
-          blockedPaths: [
-            "package.json",
-            "Dockerfile",
-            "*.sh",
-            "node_modules/**",
-            ".env",
-          ],
+          allowedPaths:
+            type === "react"
+              ? [...DEFAULT_REACT_ASSIGNMENT_SPEC.allowedPaths]
+              : ["**/*"],
+          blockedPaths: [...DEFAULT_REACT_ASSIGNMENT_SPEC.blockedPaths],
         },
       },
       {

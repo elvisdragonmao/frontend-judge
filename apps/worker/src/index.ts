@@ -6,7 +6,11 @@ import { pool, query, queryMany, queryOne } from "./db.js";
 import { uploadFile } from "./minio.js";
 import { HtmlCssJsPipeline } from "./pipelines/html-css-js.pipeline.js";
 import { ReactPipeline } from "./pipelines/react.pipeline.js";
-import type { JudgeContext, JudgePipeline } from "./pipelines/base.pipeline.js";
+import type {
+  JudgeContext,
+  JudgePipeline,
+  JudgeResult,
+} from "./pipelines/base.pipeline.js";
 
 const pipelines: Record<string, JudgePipeline> = {
   "html-css-js": new HtmlCssJsPipeline(),
@@ -27,6 +31,28 @@ let shuttingDown = false;
 
 function stepLog(message: string) {
   return `[${new Date().toISOString()}] ${message}`;
+}
+
+function formatJudgeResultLog(result: JudgeResult) {
+  const lines = [
+    stepLog("Judge result summary"),
+    stepLog(`Score: ${result.score}/${result.maxScore}`),
+  ];
+
+  if (result.testResults.length === 0) {
+    lines.push(stepLog("No test results returned"));
+    return lines.join("\n");
+  }
+
+  for (const test of result.testResults) {
+    const status = test.passed ? "PASS" : "FAIL";
+    const detail = test.message ? ` - ${test.message}` : "";
+    lines.push(
+      stepLog(`[${status}] ${test.name} (${test.score} pts)${detail}`),
+    );
+  }
+
+  return lines.join("\n");
 }
 
 async function appendRunLog(runId: string, message: string) {
@@ -152,7 +178,7 @@ async function processJob(job: JobRow) {
     }
 
     // Update results
-    const mergedLog = `${result.log}\n\n${stepLog("Results persisted")}`;
+    const mergedLog = `${result.log}\n\n${formatJudgeResultLog(result)}\n${stepLog("Results persisted")}`;
     await query(
       `UPDATE submission_runs
        SET status = 'completed', score = $1, max_score = $2,
