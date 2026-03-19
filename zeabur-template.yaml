@@ -246,11 +246,11 @@ spec:
           branch: main
         ports:
           - id: web
-            port: 3000
+            port: 8080
             type: HTTP
         env:
           PORT:
-            default: "3000"
+            default: "8080"
           HOST:
             default: "0.0.0.0"
           DATABASE_URL:
@@ -273,16 +273,18 @@ spec:
             default: ${MINIO_PASSWORD}
           MINIO_USE_SSL:
             default: "false"
+          ZBPACK_APP_DIR:
+            default: "apps/api"
           ZBPACK_BUILD_COMMAND:
-            default: pnpm --filter @judge/api build && pnpm --filter @judge/api db:migrate && pnpm --filter @judge/api db:seed
+            default: pnpm build && pnpm db:migrate && pnpm db:seed
           ZBPACK_START_COMMAND:
-            default: node apps/api/dist/index.js
+            default: node dist/index.js
           API_HOST:
             default: ${CONTAINER_HOSTNAME}
             expose: true
             readonly: true
           API_PORT:
-            default: "3000"
+            default: "8080"
             expose: true
             readonly: true
 
@@ -298,17 +300,17 @@ spec:
           branch: main
         ports:
           - id: web
-            port: 3001
+            port: 8080
             type: HTTP
         env:
           PORT:
-            default: "3001"
+            default: "8080"
           WEB_HOST:
             default: ${CONTAINER_HOSTNAME}
             expose: true
             readonly: true
           WEB_PORT:
-            default: "3001"
+            default: "8080"
             expose: true
             readonly: true
           ZBPACK_APP_DIR:
