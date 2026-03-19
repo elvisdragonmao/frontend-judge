@@ -234,7 +234,7 @@ spec:
             content: ${MINIO_PASSWORD}
 
     - name: API
-      icon: https://raw.githubusercontent.com/zeabur/service-icons/main/marketplace/node.svg
+      icon: https://service-icons.zeabur.com/git/nodejs/default.svg
       template: GIT
       dependencies:
         - PostgreSQL
@@ -287,7 +287,7 @@ spec:
             readonly: true
 
     - name: Web
-      icon: https://raw.githubusercontent.com/zeabur/service-icons/main/marketplace/node.svg
+      icon: https://service-icons.zeabur.com/git/nodejs/default.svg
       template: GIT
       dependencies:
         - API
