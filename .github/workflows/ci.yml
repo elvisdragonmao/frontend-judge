@@ -22,6 +22,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Build shared
+        run: pnpm --filter @judge/shared build
+
       - name: Type check shared
         run: pnpm exec tsc --noEmit --project packages/shared/tsconfig.json
 
@@ -49,6 +52,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Build shared
+        run: pnpm --filter @judge/shared build
+
       - name: Build web
         run: pnpm --filter @judge/web build
 
@@ -70,6 +76,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Build shared
+        run: pnpm --filter @judge/shared build
+
       - name: Build API
         run: pnpm --filter @judge/api build
 
@@ -87,6 +96,9 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Build shared
+        run: pnpm --filter @judge/shared build
 
       - name: Build Worker
         run: pnpm --filter @judge/worker build
