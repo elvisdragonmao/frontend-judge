@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { normalizeSubmissionPath, shouldIgnoreUploadPath } from "@judge/shared";
 import { Button } from "@/components/ui/button";
 
@@ -8,6 +9,7 @@ interface FileUploaderProps {
 }
 
 export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -82,9 +84,11 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <p className="text-sm font-medium">拖曳檔案到這裡上傳</p>
+        <p className="text-sm font-medium">
+          {t("components.fileUploader.drag")}
+        </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          也可使用下方按鈕選擇檔案或資料夾
+          {t("components.fileUploader.helper")}
         </p>
 
         <div className="mt-4 flex justify-center gap-2">
@@ -103,7 +107,7 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
           >
-            選擇檔案
+            {t("components.fileUploader.chooseFiles")}
           </Button>
 
           {/* Folder upload */}
@@ -125,7 +129,7 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
             onClick={() => folderInputRef.current?.click()}
             disabled={isLoading}
           >
-            選擇資料夾
+            {t("components.fileUploader.chooseFolder")}
           </Button>
         </div>
       </div>
@@ -133,7 +137,9 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
       {selectedFiles.length > 0 && (
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            已選擇 {selectedFiles.length} 個檔案
+            {t("components.fileUploader.selectedFiles", {
+              count: selectedFiles.length,
+            })}
           </p>
           <div className="max-h-40 overflow-auto rounded border border-border p-2">
             {selectedFiles.map((file, i) => (
@@ -146,15 +152,16 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
             ))}
           </div>
           <Button size="sm" onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? "上傳中..." : "提交作業"}
+            {isLoading
+              ? t("components.fileUploader.uploading")
+              : t("components.fileUploader.submit")}
           </Button>
         </div>
       )}
 
       {ignoredCount > 0 && (
         <p className="text-xs text-muted-foreground">
-          已自動忽略 {ignoredCount} 個檔案（例如 `node_modules`、`dist`、
-          `build`）。
+          {t("components.fileUploader.ignoredFiles", { count: ignoredCount })}
         </p>
       )}
     </div>

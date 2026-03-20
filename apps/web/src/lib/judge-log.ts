@@ -1,3 +1,5 @@
+import { i18n } from "@/i18n";
+
 export interface JudgeStage {
   id: string;
   label: string;
@@ -13,42 +15,35 @@ const CONTROL_PATTERN = /[\u0000-\u0008\u000b-\u001f\u007f]/g;
 const STAGE_DEFINITIONS = [
   {
     id: "download",
-    label: "下載檔案（MinIO）",
     match:
       /Downloading submission files from MinIO|Downloaded \d+ submission files|Downloaded:/,
   },
   {
     id: "prepare",
-    label: "準備評測環境",
     match:
       /Preparing judge workspace|Preparing Playwright tests|Starting Docker judge environment|Starting judge pipeline execution/,
   },
   {
     id: "install",
-    label: "安裝相依（pnpm）",
     match:
       /pnpm install|Progress: resolved|Packages: \+[0-9]+|Already up to date|Lockfile is up to date/,
   },
   {
     id: "build",
-    label: "建置專案（build）",
     match:
       /> .* build|vite build|building client environment|transforming\.\.\.|rendering chunks|computing gzip size|built in \d+(?:\.\d+)?(?:ms|s)/,
   },
   {
     id: "test",
-    label: "執行測試（Playwright）",
     match:
       /Running \d+ tests using|tests\/judge\.spec\.ts|\[\d+\/\d+\]|GET \/|expect\(/,
   },
   {
     id: "upload",
-    label: "上傳附件（MinIO）",
     match: /Pipeline finished, uploading artifacts|Artifact uploaded:/,
   },
   {
     id: "persist",
-    label: "整理結果",
     match: /Judge result summary|Results persisted/,
   },
 ] as const;
@@ -81,21 +76,24 @@ export function getJudgeStages(
     status === "pending" || status === "queued" || status === "running";
 
   return STAGE_DEFINITIONS.map((stage, index) => {
+    const label = i18n.t(`judgeStages.${stage.id}`);
+
     if (index < reachedStageIndex) {
-      return { ...stage, state: "done" as const };
+      return { ...stage, label, state: "done" as const };
     }
 
     if (index === reachedStageIndex) {
       return {
         ...stage,
+        label,
         state: isActive ? ("current" as const) : ("done" as const),
       };
     }
 
     if (reachedStageIndex === -1 && isActive && index === 0) {
-      return { ...stage, state: "current" as const };
+      return { ...stage, label, state: "current" as const };
     }
 
-    return { ...stage, state: "pending" as const };
+    return { ...stage, label, state: "pending" as const };
   });
 }

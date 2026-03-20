@@ -1,4 +1,5 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
 import { useRejudgeSubmission, useSubmissionDetail } from "@/hooks/use-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import {
   isSubmissionActive,
 } from "@/lib/submission-status";
 import { getJudgeStages, sanitizeJudgeLog } from "@/lib/judge-log";
+import { formatDateTime } from "@/i18n";
 
 function ArtifactImage({
   artifactId,
@@ -24,25 +26,22 @@ function ArtifactImage({
   alt: string;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    const token = localStorage.getItem("token");
-    console.log(
-      `[ArtifactImage] Token exists: ${!!token}, artifactId: ${artifactId}`,
-    );
+
     api
       .get<{ url: string }>(`/artifacts/${artifactId}/url`)
       .then((res) => {
-        console.log(`[ArtifactImage] Got URL:`, res.url);
         if (!cancelled) setImageUrl(res.url);
       })
-      .catch((err) => {
-        console.error(`[ArtifactImage] Error:`, err);
+      .catch(() => {
         if (!cancelled) setError(true);
       });
+
     return () => {
       cancelled = true;
     };
@@ -51,7 +50,7 @@ function ArtifactImage({
   if (error) {
     return (
       <div className="flex h-32 items-center justify-center bg-muted text-muted-foreground">
-        無法載入圖片
+        {t("pages.submissionDetail.imageLoadFailed")}
       </div>
     );
   }
@@ -59,7 +58,7 @@ function ArtifactImage({
   if (!imageUrl) {
     return (
       <div className="flex h-32 items-center justify-center bg-muted text-muted-foreground">
-        載入中...
+        {t("common.loading")}
       </div>
     );
   }
@@ -68,6 +67,7 @@ function ArtifactImage({
 }
 
 export function SubmissionDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const {
@@ -81,28 +81,33 @@ export function SubmissionDetailPage() {
   );
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
-  const handleDownloadFile = useCallback(async (fileId: string) => {
-    setDownloadError(null);
-    setDownloadingFileId(fileId);
-    try {
-      const result = await api.get<{ url: string }>(
-        `/submission-files/${fileId}/download`,
-      );
-      window.open(result.url, "_blank", "noopener,noreferrer");
-    } catch {
-      setDownloadError("下載失敗，請稍後再試");
-    } finally {
-      setDownloadingFileId(null);
-    }
-  }, []);
+  const handleDownloadFile = useCallback(
+    async (fileId: string) => {
+      setDownloadError(null);
+      setDownloadingFileId(fileId);
+
+      try {
+        const result = await api.get<{ url: string }>(
+          `/submission-files/${fileId}/download`,
+        );
+        window.open(result.url, "_blank", "noopener,noreferrer");
+      } catch {
+        setDownloadError(t("pages.submissionDetail.downloadFailed"));
+      } finally {
+        setDownloadingFileId(null);
+      }
+    },
+    [t],
+  );
+
   const isInQueue = submission ? isSubmissionActive(submission.status) : false;
   const refreshCountdown = useRefetchCountdown(isInQueue, 5000, dataUpdatedAt);
 
   if (isLoading) {
     return (
       <>
-        <PageTitle title="提交載入中" />
-        <p className="text-muted-foreground">載入中...</p>
+        <PageTitle title={t("pages.submissionDetail.loadingTitle")} />
+        <p className="text-muted-foreground">{t("common.loading")}</p>
       </>
     );
   }
@@ -110,8 +115,10 @@ export function SubmissionDetailPage() {
   if (!submission) {
     return (
       <>
-        <PageTitle title="提交不存在" />
-        <p className="text-muted-foreground">提交不存在</p>
+        <PageTitle title={t("pages.submissionDetail.notFoundTitle")} />
+        <p className="text-muted-foreground">
+          {t("pages.submissionDetail.notFoundTitle")}
+        </p>
       </>
     );
   }
@@ -127,15 +134,27 @@ export function SubmissionDetailPage() {
 
   return (
     <div className="space-y-6">
-      <PageTitle title={`提交詳情 - ${submission.displayName}`} />
+      <PageTitle
+        title={t("pages.submissionDetail.pageTitle", {
+          name: submission.displayName,
+        })}
+      />
+
       <div>
         <Button asChild variant="outline" size="sm" className="mb-3">
-          <Link to={`/assignments/${submission.assignmentId}`}>返回題目</Link>
+          <Link to={`/assignments/${submission.assignmentId}`}>
+            {t("pages.submissionDetail.backToAssignment")}
+          </Link>
         </Button>
-        <h1 className="text-2xl font-bold">提交詳情</h1>
+        <h1 className="text-2xl font-bold">
+          {t("pages.submissionDetail.title")}
+        </h1>
         <p className="text-muted-foreground">
-          {submission.displayName} (@{submission.username}) /{" "}
-          {new Date(submission.createdAt).toLocaleString("zh-TW")}
+          {t("pages.submissionDetail.meta", {
+            name: submission.displayName,
+            username: submission.username,
+            date: formatDateTime(submission.createdAt),
+          })}
         </p>
       </div>
 
@@ -146,21 +165,28 @@ export function SubmissionDetailPage() {
             onClick={() => rejudgeMutation.mutate()}
             disabled={rejudgeMutation.isPending || isInQueue}
           >
-            {rejudgeMutation.isPending ? "重新排測中..." : "重新測試"}
+            {rejudgeMutation.isPending
+              ? t("pages.submissionDetail.rejudging")
+              : t("pages.submissionDetail.rejudge")}
           </Button>
           {isInQueue && (
-            <p className="text-xs text-muted-foreground">目前已在評測隊列中</p>
+            <p className="text-xs text-muted-foreground">
+              {t("pages.submissionDetail.inQueue")}
+            </p>
           )}
           {rejudgeMutation.isSuccess && (
-            <p className="text-xs text-green-600">已重新排入評測</p>
+            <p className="text-xs text-green-600">
+              {t("pages.submissionDetail.rejudgeSuccess")}
+            </p>
           )}
           {rejudgeMutation.isError && (
-            <p className="text-xs text-destructive">重新測試失敗，請稍後再試</p>
+            <p className="text-xs text-destructive">
+              {t("pages.submissionDetail.rejudgeFailed")}
+            </p>
           )}
         </div>
       )}
 
-      {/* Overview */}
       <div className="flex items-center gap-4">
         <Badge
           variant={getSubmissionStatusVariant(submission.status)}
@@ -170,23 +196,31 @@ export function SubmissionDetailPage() {
         </Badge>
         {isInQueue && (
           <span className="text-xs text-muted-foreground">
-            {refreshCountdown} 秒後更新
+            {t("pages.submissionDetail.refreshIn", {
+              seconds: refreshCountdown,
+            })}
           </span>
         )}
         {submission.score !== null && (
           <span className="text-lg font-semibold">
-            {submission.score} / {submission.maxScore} 分
+            {t("pages.submissionDetail.scoreValue", {
+              score: submission.score,
+              maxScore: submission.maxScore,
+            })}
           </span>
         )}
         <span className="text-sm text-muted-foreground">
-          {submission.fileCount} 個檔案
+          {t("pages.submissionDetail.filesCount", {
+            count: submission.fileCount,
+          })}
         </span>
       </div>
 
-      {/* Files */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">上傳檔案</CardTitle>
+          <CardTitle className="text-base">
+            {t("pages.submissionDetail.uploadedFiles")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {downloadError && (
@@ -207,7 +241,9 @@ export function SubmissionDetailPage() {
                       onClick={() => handleDownloadFile(file.id)}
                       disabled={downloadingFileId === file.id}
                     >
-                      {downloadingFileId === file.id ? "下載中..." : "下載"}
+                      {downloadingFileId === file.id
+                        ? t("pages.submissionDetail.downloading")
+                        : t("pages.submissionDetail.download")}
                     </Button>
                   )}
                 </div>
@@ -220,38 +256,47 @@ export function SubmissionDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Runs */}
       {runsWithDerivedState.map((run) => (
         <Card key={run.id}>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">評測結果</CardTitle>
+              <CardTitle className="text-base">
+                {t("pages.submissionDetail.judgeResult")}
+              </CardTitle>
               <Badge variant={getSubmissionStatusVariant(run.status)}>
                 {getSubmissionStatusLabel(run.status)}
               </Badge>
             </div>
             {run.startedAt && (
               <p className="text-xs text-muted-foreground">
-                開始: {new Date(run.startedAt).toLocaleString("zh-TW")}
+                {t("pages.submissionDetail.startedAt", {
+                  date: formatDateTime(run.startedAt),
+                })}
                 {run.finishedAt && (
                   <>
-                    {" "}
-                    / 結束: {new Date(run.finishedAt).toLocaleString("zh-TW")}
+                    {" / "}
+                    {t("pages.submissionDetail.finishedAt", {
+                      date: formatDateTime(run.finishedAt),
+                    })}
                   </>
                 )}
               </p>
             )}
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Score */}
             {run.score !== null && (
               <div className="text-lg font-semibold">
-                分數: {run.score} / {run.maxScore}
+                {t("pages.submissionDetail.scoreLabel", {
+                  score: run.score,
+                  maxScore: run.maxScore,
+                })}
               </div>
             )}
 
             <div className="space-y-2">
-              <h4 className="text-sm font-medium">執行階段</h4>
+              <h4 className="text-sm font-medium">
+                {t("pages.submissionDetail.stages")}
+              </h4>
               <div className="flex flex-wrap gap-2">
                 {run.stages.map((stage) => (
                   <Badge
@@ -270,14 +315,15 @@ export function SubmissionDetailPage() {
               </div>
             </div>
 
-            {/* Test results */}
             {run.testResults && run.testResults.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">測試結果</h4>
+                <h4 className="text-sm font-medium">
+                  {t("pages.submissionDetail.tests")}
+                </h4>
                 <div className="space-y-1">
-                  {run.testResults.map((test, i) => (
+                  {run.testResults.map((test, index) => (
                     <div
-                      key={i}
+                      key={index}
                       className="flex items-center justify-between rounded border border-border px-3 py-2 text-sm"
                     >
                       <div className="flex items-center gap-2">
@@ -286,12 +332,16 @@ export function SubmissionDetailPage() {
                             test.passed ? "text-green-600" : "text-red-600"
                           }
                         >
-                          {test.passed ? "PASS" : "FAIL"}
+                          {test.passed
+                            ? t("pages.submissionDetail.pass")
+                            : t("pages.submissionDetail.fail")}
                         </span>
                         <span>{test.name}</span>
                       </div>
                       <span className="text-muted-foreground">
-                        {test.score} 分
+                        {t("pages.submissionDetail.points", {
+                          count: test.score,
+                        })}
                       </span>
                     </div>
                   ))}
@@ -299,14 +349,12 @@ export function SubmissionDetailPage() {
               </div>
             )}
 
-            {/* Log */}
             {run.cleanLog && (
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">Log</h4>
                 {run.cleanLog.includes("ETIMEDOUT") && (
                   <p className="text-xs text-amber-600">
-                    此次評測在容器內逾時，通常是 npm install/build
-                    太久或程式卡住。
+                    {t("pages.submissionDetail.timeoutHint")}
                   </p>
                 )}
                 <pre className="max-h-60 overflow-auto rounded bg-muted p-3 text-xs">
@@ -315,13 +363,14 @@ export function SubmissionDetailPage() {
               </div>
             )}
 
-            {/* Artifacts */}
             {run.artifacts.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">截圖與附件</h4>
+                <h4 className="text-sm font-medium">
+                  {t("pages.submissionDetail.artifacts")}
+                </h4>
                 <div className="grid grid-cols-2 gap-2">
                   {run.artifacts
-                    .filter((a) => a.type === "screenshot")
+                    .filter((artifact) => artifact.type === "screenshot")
                     .map((artifact) => (
                       <div
                         key={artifact.id}

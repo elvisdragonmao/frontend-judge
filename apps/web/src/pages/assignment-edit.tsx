@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { DEFAULT_REACT_ASSIGNMENT_SPEC } from "@judge/shared";
 import { useNavigate, useParams } from "react-router";
 import { useAssignmentDetail, useUpdateAssignment } from "@/hooks/use-api";
@@ -10,6 +11,7 @@ import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { TestTemplatePicker } from "@/components/test-template-picker";
 
 export function AssignmentEditPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: assignment, isLoading } = useAssignmentDetail(id!);
@@ -92,8 +94,8 @@ export function AssignmentEditPage() {
   if (isLoading) {
     return (
       <>
-        <PageTitle title="作業載入中" />
-        <p className="text-muted-foreground">載入中...</p>
+        <PageTitle title={t("pages.assignmentEdit.loadingTitle")} />
+        <p className="text-muted-foreground">{t("common.loading")}</p>
       </>
     );
   }
@@ -101,35 +103,45 @@ export function AssignmentEditPage() {
   if (!assignment) {
     return (
       <>
-        <PageTitle title="作業不存在" />
-        <p className="text-muted-foreground">作業不存在</p>
+        <PageTitle title={t("pages.assignmentEdit.notFoundTitle")} />
+        <p className="text-muted-foreground">
+          {t("pages.assignmentEdit.notFoundTitle")}
+        </p>
       </>
     );
   }
 
   return (
     <div className="space-y-6">
-      <PageTitle title={`編輯作業 - ${assignment.title}`} />
-      <h1 className="text-2xl font-bold">編輯作業</h1>
+      <PageTitle
+        title={t("pages.assignmentEdit.pageTitle", { title: assignment.title })}
+      />
+      <h1 className="text-2xl font-bold">{t("pages.assignmentEdit.title")}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">基本資訊</CardTitle>
+            <CardTitle className="text-base">
+              {t("pages.assignmentForm.basicInfo")}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">標題</label>
+              <label className="text-sm font-medium">
+                {t("pages.assignmentForm.titleLabel")}
+              </label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="作業標題"
+                placeholder={t("pages.assignmentForm.titlePlaceholder")}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">題型</label>
+              <label className="text-sm font-medium">
+                {t("pages.assignmentForm.typeLabel")}
+              </label>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -137,7 +149,7 @@ export function AssignmentEditPage() {
                   size="sm"
                   onClick={() => setType("html-css-js")}
                 >
-                  HTML / CSS / JS
+                  {t("assignmentTypes.html-css-js")}
                 </Button>
                 <Button
                   type="button"
@@ -145,13 +157,15 @@ export function AssignmentEditPage() {
                   size="sm"
                   onClick={() => setType("react")}
                 >
-                  React
+                  {t("assignmentTypes.react")}
                 </Button>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">截止時間（選填）</label>
+              <label className="text-sm font-medium">
+                {t("pages.assignmentForm.dueDateOptional")}
+              </label>
               <Input
                 type="datetime-local"
                 value={dueDate}
@@ -168,7 +182,7 @@ export function AssignmentEditPage() {
                 className="h-4 w-4"
               />
               <label htmlFor="allowMultiple" className="text-sm">
-                允許多次提交
+                {t("pages.assignmentForm.allowMultiple")}
               </label>
             </div>
           </CardContent>
@@ -176,7 +190,9 @@ export function AssignmentEditPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">修改後的繳交紀錄處理</CardTitle>
+            <CardTitle className="text-base">
+              {t("pages.assignmentEdit.submissionRecordActionTitle")}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <label className="flex items-center gap-2">
@@ -187,7 +203,7 @@ export function AssignmentEditPage() {
                 checked={submissionRecordAction === "keep"}
                 onChange={() => setSubmissionRecordAction("keep")}
               />
-              保留目前成績與紀錄
+              {t("pages.assignmentEdit.keepRecords")}
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -197,10 +213,10 @@ export function AssignmentEditPage() {
                 checked={submissionRecordAction === "delete"}
                 onChange={() => setSubmissionRecordAction("delete")}
               />
-              刪除目前所有繳交與成績紀錄
+              {t("pages.assignmentEdit.deleteRecords")}
             </label>
             <p className="text-xs text-muted-foreground">
-              選擇刪除時，會清空此作業目前的 submissions/runs/artifacts。
+              {t("pages.assignmentEdit.deleteHelp")}
             </p>
           </CardContent>
         </Card>
@@ -208,14 +224,16 @@ export function AssignmentEditPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">題目描述 (Markdown)</CardTitle>
+              <CardTitle className="text-base">
+                {t("pages.assignmentForm.descriptionMarkdown")}
+              </CardTitle>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowPreview(!showPreview)}
               >
-                {showPreview ? "編輯" : "預覽"}
+                {showPreview ? t("common.edit") : t("common.preview")}
               </Button>
             </div>
           </CardHeader>
@@ -226,7 +244,7 @@ export function AssignmentEditPage() {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="用 Markdown 撰寫題目描述..."
+                placeholder={t("pages.assignmentForm.descriptionPlaceholder")}
                 className="min-h-[200px] w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
             )}
@@ -236,14 +254,18 @@ export function AssignmentEditPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">測試規格</CardTitle>
+              <CardTitle className="text-base">
+                {t("pages.assignmentForm.testSpec")}
+              </CardTitle>
               <Button
                 type="button"
                 variant={showTemplatePicker ? "default" : "outline"}
                 size="sm"
                 onClick={() => setShowTemplatePicker(!showTemplatePicker)}
               >
-                {showTemplatePicker ? "收起模板" : "使用測試模板"}
+                {showTemplatePicker
+                  ? t("pages.assignmentForm.hideTemplates")
+                  : t("pages.assignmentForm.showTemplates")}
               </Button>
             </div>
           </CardHeader>
@@ -256,10 +278,13 @@ export function AssignmentEditPage() {
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Playwright 測試腳本</label>
+              <label className="text-sm font-medium">
+                {t("pages.assignmentForm.playwrightScript")}
+              </label>
               <textarea
                 value={testContent}
                 onChange={(e) => setTestContent(e.target.value)}
+                placeholder={t("pages.assignmentForm.scriptPlaceholder")}
                 className="min-h-[250px] w-full rounded-md border border-border bg-transparent px-3 py-2 font-mono text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
             </div>
@@ -268,10 +293,12 @@ export function AssignmentEditPage() {
 
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-            取消
+            {t("common.cancel")}
           </Button>
           <Button type="submit" disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? "更新中..." : "儲存變更"}
+            {updateMutation.isPending
+              ? t("pages.assignmentEdit.updating")
+              : t("pages.assignmentEdit.submit")}
           </Button>
         </div>
       </form>

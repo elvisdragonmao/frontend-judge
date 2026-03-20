@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import { PageTitle } from "@/components/page-title";
 import { useAuth } from "@/stores/auth";
 import { useClasses, useCreateClass } from "@/hooks/use-api";
@@ -15,6 +16,7 @@ import { isStaff } from "@judge/shared";
 import { useState } from "react";
 
 export function ClassesPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { data: classes, isLoading } = useClasses();
   const createClassMutation = useCreateClass();
@@ -38,12 +40,14 @@ export function ClassesPage() {
 
   return (
     <div className="space-y-6">
-      <PageTitle title="班級" />
+      <PageTitle title={t("pages.classes.title")} />
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">班級</h1>
+        <h1 className="text-2xl font-bold">{t("pages.classes.title")}</h1>
         {user && isStaff(user.role) && (
           <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
-            {showCreate ? "取消" : "建立班級"}
+            {showCreate
+              ? t("pages.classes.cancelCreate")
+              : t("pages.classes.createClass")}
           </Button>
         )}
       </div>
@@ -53,25 +57,27 @@ export function ClassesPage() {
           <CardContent className="pt-6">
             <form onSubmit={handleCreate} className="flex gap-3">
               <Input
-                placeholder="班級名稱"
+                placeholder={t("pages.classes.namePlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
               />
               <Input
-                placeholder="描述（選填）"
+                placeholder={t("pages.classes.descriptionPlaceholder")}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
               <Button type="submit" disabled={createClassMutation.isPending}>
-                建立
+                {t("pages.classes.create")}
               </Button>
             </form>
           </CardContent>
         </Card>
       )}
 
-      {isLoading && <p className="text-muted-foreground">載入中...</p>}
+      {isLoading && (
+        <p className="text-muted-foreground">{t("common.loading")}</p>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {classes?.map((cls) => (
@@ -79,12 +85,20 @@ export function ClassesPage() {
             <Card className="transition-shadow hover:shadow-md">
               <CardHeader>
                 <CardTitle>{cls.name}</CardTitle>
-                <CardDescription>{cls.description || "無描述"}</CardDescription>
+                <CardDescription>
+                  {cls.description || t("pages.classes.noDescription")}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-4 text-sm text-muted-foreground">
-                  <span>{cls.memberCount} 位成員</span>
-                  <span>{cls.assignmentCount} 項作業</span>
+                  <span>
+                    {t("pages.classes.memberCount", { count: cls.memberCount })}
+                  </span>
+                  <span>
+                    {t("pages.classes.assignmentCount", {
+                      count: cls.assignmentCount,
+                    })}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -94,7 +108,9 @@ export function ClassesPage() {
 
       {classes?.length === 0 && !isLoading && (
         <p className="text-center text-muted-foreground">
-          {user?.role === "student" ? "你尚未加入任何班級" : "尚未建立任何班級"}
+          {user?.role === "student"
+            ? t("pages.classes.emptyStudent")
+            : t("pages.classes.emptyStaff")}
         </p>
       )}
     </div>

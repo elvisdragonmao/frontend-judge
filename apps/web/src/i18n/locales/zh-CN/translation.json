@@ -1,0 +1,497 @@
+{
+  "common": {
+    "appName": "emjudge",
+    "loading": "加载中...",
+    "cancel": "取消",
+    "save": "保存",
+    "edit": "编辑",
+    "preview": "预览",
+    "confirm": "确认"
+  },
+  "languages": {
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English"
+  },
+  "roles": {
+    "student": "学生",
+    "teacher": "教师",
+    "admin": "管理员"
+  },
+  "assignmentTypes": {
+    "html-css-js": "HTML / CSS / JS",
+    "react": "React"
+  },
+  "layout": {
+    "nav": {
+      "classes": "班级",
+      "admin": "管理",
+      "logout": "登出"
+    },
+    "theme": {
+      "toggle": "切换主题"
+    },
+    "language": {
+      "label": "语言"
+    }
+  },
+  "components": {
+    "submissionGrid": {
+      "screenshotAlt": "{{name}} 的截图",
+      "noScreenshot": "无截图",
+      "score": "分数: {{score}} / {{maxScore}}",
+      "userFiles": "@{{username}} / {{count}} 个文件"
+    },
+    "scoreChart": {
+      "title": "班级累计分数变化",
+      "tooltip": "{{time}}<br/>班级累计分数：{{value}}<br/>最新增长作业：{{assignmentTitle}}"
+    },
+    "fileUploader": {
+      "drag": "拖曳文件到这里上传",
+      "helper": "也可以使用下方按钮选择文件或文件夹",
+      "chooseFiles": "选择文件",
+      "chooseFolder": "选择文件夹",
+      "selectedFiles": "已选择 {{count}} 个文件",
+      "uploading": "上传中...",
+      "submit": "提交作业",
+      "ignoredFiles": "已自动忽略 {{count}} 个文件（例如 `node_modules`、`dist`、`build`）。"
+    }
+  },
+  "templatePicker": {
+    "paramCount": "{{count}} 个参数",
+    "noConfig": "无需设置",
+    "paramSettings": "{{name}} — 参数设置",
+    "noExtraSettings": "此模板不需要额外设置。",
+    "previewCode": "预览代码",
+    "applyReplace": "覆盖应用",
+    "applyAppend": "追加应用",
+    "generatedCode": "生成的测试代码：",
+    "categories": {
+      "html-elements": "HTML 元素",
+      "styling": "CSS 样式",
+      "functionality": "功能交互",
+      "page": "页面质量",
+      "screenshot": "截图",
+      "react": "React"
+    },
+    "templates": {
+      "html-required-elements": {
+        "name": "必要 HTML 元素检查",
+        "description": "检查页面是否包含指定的 HTML 元素，例如 nav、header、footer、main、h1。",
+        "params": {
+          "selectors": {
+            "label": "要检查的 CSS selectors（每行一个）",
+            "placeholder": "nav\nheader\nfooter\nmain\nh1"
+          }
+        }
+      },
+      "html-element-count": {
+        "name": "HTML 元素数量检查",
+        "description": "检查特定元素数量是否符合预期，例如 li、img、a。",
+        "params": {
+          "rules": {
+            "label": "规则（每行一条：selector,最少数量）",
+            "placeholder": "li,3\nimg,2\na,5"
+          }
+        }
+      },
+      "html-form-elements": {
+        "name": "表单元素检查",
+        "description": "检查页面是否具有完整的表单结构。",
+        "params": {
+          "formSelector": {
+            "label": "表单 selector",
+            "placeholder": "form"
+          },
+          "inputNames": {
+            "label": "必要 input name 属性（每行一个）",
+            "placeholder": "name\nemail\npassword"
+          },
+          "requireSubmitButton": {
+            "label": "需要 submit 按钮 (1=是, 0=否)",
+            "placeholder": "1"
+          }
+        }
+      },
+      "styling-property-check": {
+        "name": "CSS 样式属性检查",
+        "description": "检查元素是否具有指定的 CSS 属性值。",
+        "params": {
+          "rules": {
+            "label": "规则（每行一条：selector | 属性 | 预期值）",
+            "placeholder": "nav | display | flex\nh1 | font-size | 24px\nbody | margin | 0px"
+          }
+        }
+      },
+      "styling-responsive": {
+        "name": "RWD 响应式检查",
+        "description": "在不同窗口宽度下检查元素可见性或样式。",
+        "params": {
+          "rules": {
+            "label": "规则（每行一条：宽度 | selector | visible/hidden）",
+            "placeholder": "375 | .desktop-nav | hidden\n375 | .mobile-menu | visible\n1024 | .desktop-nav | visible"
+          }
+        }
+      },
+      "styling-no-default": {
+        "name": "禁止浏览器默认样式",
+        "description": "检查页面是否移除默认样式并套用自定义字体或背景。",
+        "params": {
+          "bodyNoMargin": {
+            "label": "检查 body 无默认 margin (1=是)",
+            "placeholder": "1"
+          },
+          "customFont": {
+            "label": "检查是否使用自定义字体 (1=是)",
+            "placeholder": "1"
+          },
+          "hasBackground": {
+            "label": "检查 body 有自定义背景色 (1=是)",
+            "placeholder": "0"
+          }
+        }
+      },
+      "func-click-event": {
+        "name": "按钮点击事件",
+        "description": "点击按钮后检查页面是否出现预期变化。",
+        "params": {
+          "buttonSelector": {
+            "label": "按钮 selector",
+            "placeholder": "#myButton"
+          },
+          "resultSelector": {
+            "label": "结果显示的 selector",
+            "placeholder": "#result"
+          },
+          "expectedText": {
+            "label": "预期出现的文字",
+            "placeholder": "Hello!"
+          }
+        }
+      },
+      "func-form-submit": {
+        "name": "表单提交验证",
+        "description": "填写表单字段并提交，检查提交后的结果或验证信息。",
+        "params": {
+          "fields": {
+            "label": "字段填写（每行：selector | 值）",
+            "placeholder": "#name | 小明\n#email | test@example.com"
+          },
+          "submitSelector": {
+            "label": "提交按钮 selector",
+            "placeholder": "button[type=\"submit\"]"
+          },
+          "successSelector": {
+            "label": "成功消息 selector",
+            "placeholder": ".success-message"
+          },
+          "successText": {
+            "label": "成功消息文字（留空表示只检查可见性）",
+            "placeholder": "提交成功"
+          }
+        }
+      },
+      "func-localstorage": {
+        "name": "LocalStorage 数据保存",
+        "description": "检查交互后是否正确使用 localStorage 保存数据。",
+        "params": {
+          "action": {
+            "label": "触发动作（click selector）",
+            "placeholder": "#saveBtn"
+          },
+          "storageKey": {
+            "label": "localStorage key",
+            "placeholder": "userData"
+          }
+        }
+      },
+      "page-title": {
+        "name": "页面标题检查",
+        "description": "检查 <title> 是否包含指定文字。",
+        "params": {
+          "title": {
+            "label": "预期标题（支持正则）",
+            "placeholder": "My Website"
+          }
+        }
+      },
+      "page-meta": {
+        "name": "页面 meta 标签检查",
+        "description": "检查 meta viewport、charset、description 是否正确设置。",
+        "params": {
+          "requireViewport": {
+            "label": "需要 viewport meta (1=是)",
+            "placeholder": "1"
+          },
+          "requireCharset": {
+            "label": "需要 charset meta (1=是)",
+            "placeholder": "1"
+          },
+          "requireDescription": {
+            "label": "需要 description meta (1=是)",
+            "placeholder": "1"
+          }
+        }
+      },
+      "page-multi-page": {
+        "name": "多页面导航检查",
+        "description": "检查网站是否有多个页面，链接是否能正常导航。",
+        "params": {
+          "links": {
+            "label": "要检查的页面路径（每行一条：路径 | 预期标题或元素 selector）",
+            "placeholder": "/ | h1\n/about | h1\n/contact | form"
+          }
+        }
+      },
+      "page-no-console-errors": {
+        "name": "无 Console 错误",
+        "description": "确认页面加载后没有 JavaScript console error。"
+      },
+      "page-accessibility": {
+        "name": "基础无障碍检查",
+        "description": "检查图片 alt、语义化标签与 heading 顺序等基础无障碍项目。"
+      },
+      "screenshot-capture": {
+        "name": "截图抓取",
+        "description": "加载页面后抓取整页截图。",
+        "params": {
+          "pages": {
+            "label": "要截图的路径（每行一条）",
+            "placeholder": "/\n/about"
+          }
+        }
+      },
+      "react-component-render": {
+        "name": "React 组件渲染检查",
+        "description": "检查 React 组件是否正确渲染，props 数据是否显示。",
+        "params": {
+          "selectors": {
+            "label": "要检查的元素 selector（每行一个：selector | 预期文字）",
+            "placeholder": "[data-testid=\"app-title\"] | My App\n[data-testid=\"user-list\"] |"
+          }
+        }
+      },
+      "react-state-interaction": {
+        "name": "React 状态交互检查",
+        "description": "检查 React 组件状态管理，例如 counter、toggle、list。",
+        "params": {
+          "scenario": {
+            "label": "情境 (counter / toggle / list)",
+            "placeholder": "counter"
+          }
+        }
+      }
+    }
+  },
+  "pages": {
+    "home": {
+      "title": "首页",
+      "heroTag": "Playwright 驱动的自动评测",
+      "heroDescription": "前端作业提交与自动评测平台。上传你的 HTML / CSS / JS 或 React 作业，系统会自动执行 Playwright 测试并生成分数、截图与评测报告。",
+      "enterClasses": "进入班级",
+      "login": "登录",
+      "browseClasses": "查看班级",
+      "featureUploadTitle": "上传即测",
+      "featureUploadDesc": "拖放或选择作业文件，系统会立即排队并执行测试。",
+      "featureScreenshotTitle": "截图反馈",
+      "featureScreenshotDesc": "Playwright 自动生成多尺寸截图，方便快速对照设计成果。",
+      "featureScoreTitle": "评分清晰",
+      "featureScoreDesc": "测试报告与错误信息一目了然，帮助学生快速修正。",
+      "ctaTitle": "一站式作业管理",
+      "ctaDescription": "从班级建立、测试模板到成绩反馈，全流程集中管理。",
+      "ctaPrimary": "开始使用",
+      "ctaSecondary": "教师登录"
+    },
+    "login": {
+      "title": "登录",
+      "username": "账号",
+      "usernamePlaceholder": "请输入账号",
+      "password": "密码",
+      "passwordPlaceholder": "请输入密码",
+      "invalidCredentials": "账号或密码错误",
+      "submitting": "登录中...",
+      "submit": "登录",
+      "hint": "此平台不开放注册，请联系管理员获取账号。"
+    },
+    "profile": {
+      "title": "个人设置",
+      "accountInfo": "账号信息",
+      "username": "账号",
+      "role": "角色",
+      "displayName": "昵称",
+      "updateDisplayName": "更新昵称",
+      "displayNameUpdated": "昵称已更新",
+      "displayNameUpdateFailed": "更新失败",
+      "changePassword": "修改密码",
+      "currentPassword": "当前密码",
+      "newPassword": "新密码",
+      "updatePassword": "更新密码",
+      "passwordUpdated": "密码已更新",
+      "passwordUpdateFailed": "密码更新失败，请检查当前密码是否正确",
+      "roles": {
+        "student": "学生",
+        "teacher": "教师",
+        "admin": "管理员"
+      }
+    },
+    "classes": {
+      "title": "班级",
+      "createClass": "创建班级",
+      "cancelCreate": "取消",
+      "namePlaceholder": "班级名称",
+      "descriptionPlaceholder": "描述（选填）",
+      "create": "创建",
+      "noDescription": "无描述",
+      "memberCount": "{{count}} 位成员",
+      "assignmentCount": "{{count}} 项作业",
+      "emptyStudent": "你尚未加入任何班级",
+      "emptyStaff": "尚未建立任何班级"
+    },
+    "assignmentForm": {
+      "basicInfo": "基本信息",
+      "titleLabel": "标题",
+      "titlePlaceholder": "作业标题",
+      "typeLabel": "题型",
+      "dueDateOptional": "截止时间（选填）",
+      "allowMultiple": "允许多次提交",
+      "descriptionMarkdown": "题目描述 (Markdown)",
+      "descriptionPlaceholder": "用 Markdown 编写题目描述...",
+      "testSpec": "测试规格",
+      "showTemplates": "使用测试模板",
+      "hideTemplates": "收起模板",
+      "playwrightScript": "Playwright 测试脚本",
+      "scriptHelp": "可从上方模板生成，或自行编写。支持“覆盖应用”（替换当前内容）与“追加应用”（合并到现有脚本后面）。",
+      "scriptPlaceholder": "import { test, expect } from '@playwright/test';\n\ntest('页面标题正确', async ({ page }) => {\n  await page.goto('/');\n  await expect(page).toHaveTitle(/My Page/);\n});"
+    },
+    "assignmentCreate": {
+      "title": "创建作业",
+      "creating": "创建中...",
+      "submit": "创建作业"
+    },
+    "assignmentEdit": {
+      "loadingTitle": "作业加载中",
+      "notFoundTitle": "作业不存在",
+      "pageTitle": "编辑作业 - {{title}}",
+      "title": "编辑作业",
+      "submissionRecordActionTitle": "修改后的提交记录处理",
+      "keepRecords": "保留当前成绩与记录",
+      "deleteRecords": "删除当前所有提交与成绩记录",
+      "deleteHelp": "选择删除时，会清空此作业当前的 submissions/runs/artifacts。",
+      "updating": "更新中...",
+      "submit": "保存更改"
+    },
+    "assignmentDetail": {
+      "loadingTitle": "作业加载中",
+      "notFoundTitle": "作业不存在",
+      "uploadFailedTooManyFiles": "提交失败：文件数量超过上限，请确认已排除 node_modules、dist 等产物后再试。",
+      "uploadFailedDefault": "提交失败，请重试。",
+      "expired": "已截止",
+      "editAssignment": "编辑题目",
+      "dueAt": "截止: {{date}}",
+      "description": "题目描述",
+      "submitAssignment": "提交作业",
+      "submitSuccess": "作业提交成功！",
+      "submissionsTitle": "提交记录 ({{count}})",
+      "hiddenDuplicates": "已隐藏重复提交，仅显示每位学生最后一次提交",
+      "refreshIn": "{{seconds}} 秒后更新",
+      "latestOnly": "仅看每人最新",
+      "list": "列表",
+      "grid": "网格",
+      "noSubmissions": "暂无提交记录"
+    },
+    "submissionDetail": {
+      "imageLoadFailed": "无法加载图片",
+      "downloadFailed": "下载失败，请稍后再试",
+      "loadingTitle": "提交加载中",
+      "notFoundTitle": "提交不存在",
+      "pageTitle": "提交详情 - {{name}}",
+      "backToAssignment": "返回题目",
+      "title": "提交详情",
+      "meta": "{{name}} (@{{username}}) / {{date}}",
+      "rejudging": "重新排测中...",
+      "rejudge": "重新测试",
+      "inQueue": "当前已在评测队列中",
+      "rejudgeSuccess": "已重新加入评测队列",
+      "rejudgeFailed": "重新测试失败，请稍后再试",
+      "refreshIn": "{{seconds}} 秒后更新",
+      "scoreValue": "{{score}} / {{maxScore}} 分",
+      "scoreLabel": "分数: {{score}} / {{maxScore}}",
+      "filesCount": "{{count}} 个文件",
+      "uploadedFiles": "上传文件",
+      "downloading": "下载中...",
+      "download": "下载",
+      "judgeResult": "评测结果",
+      "startedAt": "开始: {{date}}",
+      "finishedAt": "结束: {{date}}",
+      "stages": "执行阶段",
+      "tests": "测试结果",
+      "pass": "PASS",
+      "fail": "FAIL",
+      "points": "{{count}} 分",
+      "timeoutHint": "本次评测在容器内超时，通常是 npm install/build 太久或程序卡住。",
+      "artifacts": "截图与附件"
+    },
+    "classDetail": {
+      "loadingTitle": "班级加载中",
+      "notFoundTitle": "班级不存在",
+      "newAssignment": "出题",
+      "assignmentsTitle": "作业列表",
+      "noAssignments": "尚未建立作业",
+      "dueDate": "截止: {{date}}",
+      "submissionsCount": "{{count}} 份提交",
+      "membersTitle": "成员 ({{count}})",
+      "collapse": "收起",
+      "addMembers": "新增成员",
+      "searchPlaceholder": "搜索账号或昵称...",
+      "noMatchingUsers": "找不到符合的用户",
+      "noAvailableUsers": "没有可新增的用户",
+      "join": "加入",
+      "usernameHeader": "账号",
+      "displayNameHeader": "昵称",
+      "roleHeader": "角色",
+      "actionsHeader": "操作",
+      "remove": "移除",
+      "noMembers": "暂无成员"
+    },
+    "admin": {
+      "title": "管理后台",
+      "createUser": "创建用户",
+      "bulkImport": "批量导入",
+      "createUserTitle": "创建用户",
+      "usernamePlaceholder": "账号",
+      "passwordPlaceholder": "密码",
+      "displayNamePlaceholder": "昵称",
+      "create": "创建",
+      "bulkImportTitle": "批量导入",
+      "bulkImportHelp": "每行一条，格式: 账号,密码,昵称,角色(student/teacher/admin)",
+      "bulkImportPlaceholder": "student01,pass123,小明,student",
+      "import": "导入",
+      "importDone": "导入完成",
+      "userListTitle": "用户列表 ({{count}})",
+      "noClassJoined": "未加入班级",
+      "newPasswordPlaceholder": "新密码",
+      "resetPassword": "重置密码",
+      "previousPage": "上一页",
+      "currentPage": "第 {{page}} 页",
+      "nextPage": "下一页",
+      "invalidFormat": "格式错误"
+    }
+  },
+  "submissionStatus": {
+    "pending": "等待中",
+    "queued": "排队中",
+    "running": "评测中",
+    "completed": "完成",
+    "failed": "失败",
+    "error": "错误"
+  },
+  "judgeStages": {
+    "download": "下载文件（MinIO）",
+    "prepare": "准备评测环境",
+    "install": "安装依赖（pnpm）",
+    "build": "构建项目（build）",
+    "test": "执行测试（Playwright）",
+    "upload": "上传附件（MinIO）",
+    "persist": "整理结果"
+  }
+}

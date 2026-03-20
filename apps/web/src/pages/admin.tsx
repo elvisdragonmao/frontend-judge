@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   useUsers,
   useCreateUser,
@@ -13,13 +14,13 @@ import { PageTitle } from "@/components/page-title";
 import { Link } from "react-router";
 
 export function AdminPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const { data: userData, isLoading } = useUsers(page);
   const createUserMutation = useCreateUser();
   const bulkImportMutation = useBulkImport();
   const resetPasswordMutation = useResetPassword();
 
-  // Create user form
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -28,11 +29,9 @@ export function AdminPage() {
     "student",
   );
 
-  // Reset password
   const [resetUserId, setResetUserId] = useState<string | null>(null);
   const [resetNewPassword, setResetNewPassword] = useState("");
 
-  // Bulk import
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [bulkText, setBulkText] = useState("");
 
@@ -71,12 +70,11 @@ export function AdminPage() {
 
   const handleBulkImport = () => {
     try {
-      // Expected format: CSV lines "username,password,displayName,role"
       const lines = bulkText.trim().split("\n").filter(Boolean);
       const users = lines.map((line) => {
         const [username, password, displayName, role] = line
           .split(",")
-          .map((s) => s.trim());
+          .map((segment) => segment.trim());
         return {
           username: username!,
           password: password!,
@@ -86,45 +84,46 @@ export function AdminPage() {
       });
       bulkImportMutation.mutate({ users });
     } catch {
-      alert("格式錯誤");
+      alert(t("pages.admin.invalidFormat"));
     }
   };
 
   return (
     <div className="space-y-6">
-      <PageTitle title="管理後台" />
-      <h1 className="text-2xl font-bold">管理後台</h1>
+      <PageTitle title={t("pages.admin.title")} />
+      <h1 className="text-2xl font-bold">{t("pages.admin.title")}</h1>
 
       <div className="flex gap-2">
         <Button size="sm" onClick={() => setShowCreateUser(!showCreateUser)}>
-          建立使用者
+          {t("pages.admin.createUser")}
         </Button>
         <Button
           size="sm"
           variant="outline"
           onClick={() => setShowBulkImport(!showBulkImport)}
         >
-          批次匯入
+          {t("pages.admin.bulkImport")}
         </Button>
       </div>
 
-      {/* Create user form */}
       {showCreateUser && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">建立使用者</CardTitle>
+            <CardTitle className="text-base">
+              {t("pages.admin.createUserTitle")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreateUser} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <Input
-                  placeholder="帳號"
+                  placeholder={t("pages.admin.usernamePlaceholder")}
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value)}
                   required
                 />
                 <Input
-                  placeholder="密碼"
+                  placeholder={t("pages.admin.passwordPlaceholder")}
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -132,7 +131,7 @@ export function AdminPage() {
                   minLength={6}
                 />
                 <Input
-                  placeholder="暱稱"
+                  placeholder={t("pages.admin.displayNamePlaceholder")}
                   value={newDisplayName}
                   onChange={(e) => setNewDisplayName(e.target.value)}
                   required
@@ -142,9 +141,9 @@ export function AdminPage() {
                   onChange={(e) => setNewRole(e.target.value as typeof newRole)}
                   className="rounded-md border border-border px-3 py-2 text-sm"
                 >
-                  <option value="student">學生</option>
-                  <option value="teacher">老師</option>
-                  <option value="admin">管理員</option>
+                  <option value="student">{t("roles.student")}</option>
+                  <option value="teacher">{t("roles.teacher")}</option>
+                  <option value="admin">{t("roles.admin")}</option>
                 </select>
               </div>
               <Button
@@ -152,27 +151,28 @@ export function AdminPage() {
                 size="sm"
                 disabled={createUserMutation.isPending}
               >
-                建立
+                {t("pages.admin.create")}
               </Button>
             </form>
           </CardContent>
         </Card>
       )}
 
-      {/* Bulk import */}
       {showBulkImport && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">批次匯入</CardTitle>
+            <CardTitle className="text-base">
+              {t("pages.admin.bulkImportTitle")}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
-              每行一筆，格式: 帳號,密碼,暱稱,角色(student/teacher/admin)
+              {t("pages.admin.bulkImportHelp")}
             </p>
             <textarea
               value={bulkText}
               onChange={(e) => setBulkText(e.target.value)}
-              placeholder="student01,pass123,小明,student"
+              placeholder={t("pages.admin.bulkImportPlaceholder")}
               className="min-h-[120px] w-full rounded-md border border-border bg-transparent px-3 py-2 font-mono text-sm"
             />
             <Button
@@ -180,24 +180,27 @@ export function AdminPage() {
               onClick={handleBulkImport}
               disabled={bulkImportMutation.isPending}
             >
-              匯入
+              {t("pages.admin.import")}
             </Button>
             {bulkImportMutation.isSuccess && (
-              <p className="text-sm text-green-600">匯入完成</p>
+              <p className="text-sm text-green-600">
+                {t("pages.admin.importDone")}
+              </p>
             )}
           </CardContent>
         </Card>
       )}
 
-      {/* User list */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            使用者列表 ({userData?.total ?? 0})
+            {t("pages.admin.userListTitle", { count: userData?.total ?? 0 })}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading && <p className="text-muted-foreground">載入中...</p>}
+          {isLoading && (
+            <p className="text-muted-foreground">{t("common.loading")}</p>
+          )}
 
           <div className="space-y-2">
             {userData?.users.map((user) => (
@@ -212,8 +215,7 @@ export function AdminPage() {
                       @{user.username}
                     </p>
                   </div>
-                  <Badge variant="outline">{user.role}</Badge>
-                  {/* Show classes */}
+                  <Badge variant="outline">{t(`roles.${user.role}`)}</Badge>
                   {user.classes && user.classes.length > 0 && (
                     <div className="flex items-center gap-1">
                       {user.classes.map((cls) => (
@@ -230,7 +232,7 @@ export function AdminPage() {
                   )}
                   {user.classes && user.classes.length === 0 && (
                     <span className="text-xs text-muted-foreground">
-                      未加入班級
+                      {t("pages.admin.noClassJoined")}
                     </span>
                   )}
                 </div>
@@ -239,7 +241,7 @@ export function AdminPage() {
                     <div className="flex items-center gap-2">
                       <Input
                         type="password"
-                        placeholder="新密碼"
+                        placeholder={t("pages.admin.newPasswordPlaceholder")}
                         value={resetNewPassword}
                         onChange={(e) => setResetNewPassword(e.target.value)}
                         className="h-8 w-32"
@@ -251,14 +253,14 @@ export function AdminPage() {
                         onClick={() => handleResetPassword(user.id)}
                         disabled={resetPasswordMutation.isPending}
                       >
-                        確認
+                        {t("common.confirm")}
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => setResetUserId(null)}
                       >
-                        取消
+                        {t("common.cancel")}
                       </Button>
                     </div>
                   ) : (
@@ -267,7 +269,7 @@ export function AdminPage() {
                       variant="ghost"
                       onClick={() => setResetUserId(user.id)}
                     >
-                      重置密碼
+                      {t("pages.admin.resetPassword")}
                     </Button>
                   )}
                 </div>
@@ -275,7 +277,6 @@ export function AdminPage() {
             ))}
           </div>
 
-          {/* Pagination */}
           {userData && userData.total > 20 && (
             <div className="mt-4 flex justify-center gap-2">
               <Button
@@ -284,10 +285,10 @@ export function AdminPage() {
                 disabled={page === 1}
                 onClick={() => setPage(page - 1)}
               >
-                上一頁
+                {t("pages.admin.previousPage")}
               </Button>
               <span className="flex items-center text-sm text-muted-foreground">
-                第 {page} 頁
+                {t("pages.admin.currentPage", { page })}
               </span>
               <Button
                 size="sm"
@@ -295,7 +296,7 @@ export function AdminPage() {
                 disabled={page * 20 >= userData.total}
                 onClick={() => setPage(page + 1)}
               >
-                下一頁
+                {t("pages.admin.nextPage")}
               </Button>
             </div>
           )}

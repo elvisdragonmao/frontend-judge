@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 import { PageTitle } from "@/components/page-title";
 import { useAuth } from "@/stores/auth";
 import { useLogin } from "@/hooks/use-api";
@@ -8,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth();
@@ -29,43 +31,53 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
-      <PageTitle title="登入" />
+      <PageTitle title={t("pages.login.title")} />
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-center text-xl">登入</CardTitle>
+          <CardTitle className="text-center text-xl">
+            {t("pages.login.title")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">帳號</label>
+              <label className="text-sm font-medium">
+                {t("pages.login.username")}
+              </label>
               <Input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="請輸入帳號"
+                placeholder={t("pages.login.usernamePlaceholder")}
                 autoFocus
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">密碼</label>
+              <label className="text-sm font-medium">
+                {t("pages.login.password")}
+              </label>
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="請輸入密碼"
+                placeholder={t("pages.login.passwordPlaceholder")}
               />
             </div>
             {loginMutation.isError && (
-              <p className="text-sm text-destructive">帳號或密碼錯誤</p>
+              <p className="text-sm text-destructive">
+                {t("pages.login.invalidCredentials")}
+              </p>
             )}
             <Button
               type="submit"
               className="w-full"
               disabled={loginMutation.isPending}
             >
-              {loginMutation.isPending ? "登入中..." : "登入"}
+              {loginMutation.isPending
+                ? t("pages.login.submitting")
+                : t("pages.login.submit")}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              此平台不開放註冊，請聯繫管理員取得帳號。
+              {t("pages.login.hint")}
             </p>
           </form>
         </CardContent>

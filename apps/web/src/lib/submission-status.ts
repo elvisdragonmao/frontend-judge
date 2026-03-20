@@ -1,3 +1,5 @@
+import { i18n } from "@/i18n";
+
 const ACTIVE_SUBMISSION_STATUSES = new Set(["pending", "queued", "running"]);
 
 export function isSubmissionActive(status: string) {
@@ -21,14 +23,5 @@ export function getSubmissionStatusVariant(status: string) {
 }
 
 export function getSubmissionStatusLabel(status: string) {
-  const map: Record<string, string> = {
-    pending: "等待中",
-    queued: "排隊中",
-    running: "評測中",
-    completed: "完成",
-    failed: "失敗",
-    error: "錯誤",
-  };
-
-  return map[status] ?? status;
+  return i18n.t(`submissionStatus.${status}`, { defaultValue: status });
 }

@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
 import {
   useAssignmentDetail,
@@ -17,8 +18,10 @@ import { SubmissionGrid, SubmissionList } from "@/components/submission-grid";
 import { useRefetchCountdown } from "@/hooks/use-refetch-countdown";
 import { ApiError } from "@/lib/api";
 import { isSubmissionActive } from "@/lib/submission-status";
+import { formatDateTime } from "@/i18n";
 
 export function AssignmentDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { data: assignment, isLoading } = useAssignmentDetail(id!);
@@ -40,13 +43,13 @@ export function AssignmentDetailPage() {
         error.statusCode === 413 ||
         error.message.includes("reach files limit")
       ) {
-        return "提交失敗：檔案數量超過上限，請確認已排除 node_modules、dist 等產物後再試。";
+        return t("pages.assignmentDetail.uploadFailedTooManyFiles");
       }
 
       return error.message;
     }
 
-    return "提交失敗，請重試。";
+    return t("pages.assignmentDetail.uploadFailedDefault");
   })();
 
   const handleUpload = useCallback(
@@ -61,10 +64,12 @@ export function AssignmentDetailPage() {
     },
     [submitMutation],
   );
+
   const hasActiveSubmissions =
     submissionData?.submissions.some((submission) =>
       isSubmissionActive(submission.status),
     ) ?? false;
+
   const visibleSubmissions = useMemo(() => {
     const submissions = submissionData?.submissions ?? [];
 
@@ -83,6 +88,7 @@ export function AssignmentDetailPage() {
       return true;
     });
   }, [submissionData?.submissions, showLatestOnly]);
+
   const submissionsRefreshCountdown = useRefetchCountdown(
     hasActiveSubmissions,
     5000,
@@ -92,8 +98,8 @@ export function AssignmentDetailPage() {
   if (isLoading) {
     return (
       <>
-        <PageTitle title="作業載入中" />
-        <p className="text-muted-foreground">載入中...</p>
+        <PageTitle title={t("pages.assignmentDetail.loadingTitle")} />
+        <p className="text-muted-foreground">{t("common.loading")}</p>
       </>
     );
   }
@@ -101,8 +107,10 @@ export function AssignmentDetailPage() {
   if (!assignment) {
     return (
       <>
-        <PageTitle title="作業不存在" />
-        <p className="text-muted-foreground">作業不存在</p>
+        <PageTitle title={t("pages.assignmentDetail.notFoundTitle")} />
+        <p className="text-muted-foreground">
+          {t("pages.assignmentDetail.notFoundTitle")}
+        </p>
       </>
     );
   }
@@ -114,31 +122,45 @@ export function AssignmentDetailPage() {
   return (
     <div className="space-y-6">
       <PageTitle title={assignment.title} />
-      {/* Assignment header */}
+
       <div>
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold">{assignment.title}</h1>
-          <Badge variant="secondary">{assignment.type}</Badge>
-          {isExpired && <Badge variant="destructive">已截止</Badge>}
+          <Badge variant="secondary">
+            {t(`assignmentTypes.${assignment.type}`)}
+          </Badge>
+          {isExpired && (
+            <Badge variant="destructive">
+              {t("pages.assignmentDetail.expired")}
+            </Badge>
+          )}
           {user && isStaff(user.role) && (
             <Button asChild size="sm" variant="outline">
-              <Link to={`/assignments/${assignment.id}/edit`}>編輯題目</Link>
+              <Link to={`/assignments/${assignment.id}/edit`}>
+                {t("pages.assignmentDetail.editAssignment")}
+              </Link>
             </Button>
           )}
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {assignment.className}
           {assignment.dueDate && (
-            <> / 截止: {new Date(assignment.dueDate).toLocaleString("zh-TW")}</>
+            <>
+              {" / "}
+              {t("pages.assignmentDetail.dueAt", {
+                date: formatDateTime(assignment.dueDate),
+              })}
+            </>
           )}
         </p>
       </div>
 
-      {/* Description */}
       {assignment.description && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">題目描述</CardTitle>
+            <CardTitle className="text-base">
+              {t("pages.assignmentDetail.description")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <MarkdownRenderer content={assignment.description} />
@@ -146,11 +168,12 @@ export function AssignmentDetailPage() {
         </Card>
       )}
 
-      {/* Upload section (student only) */}
       {user?.role === "student" && !isExpired && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">繳交作業</CardTitle>
+            <CardTitle className="text-base">
+              {t("pages.assignmentDetail.submitAssignment")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <FileUploader
@@ -158,7 +181,9 @@ export function AssignmentDetailPage() {
               isLoading={submitMutation.isPending}
             />
             {submitMutation.isSuccess && (
-              <p className="mt-3 text-sm text-green-600">作業已成功提交！</p>
+              <p className="mt-3 text-sm text-green-600">
+                {t("pages.assignmentDetail.submitSuccess")}
+              </p>
             )}
             {submitErrorMessage && (
               <p className="mt-3 text-sm text-destructive">
@@ -169,22 +194,25 @@ export function AssignmentDetailPage() {
         </Card>
       )}
 
-      {/* Submissions */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold">
-              繳交紀錄 ({visibleSubmissions.length})
+              {t("pages.assignmentDetail.submissionsTitle", {
+                count: visibleSubmissions.length,
+              })}
             </h2>
             {showLatestOnly &&
               visibleSubmissions.length !== (submissionData?.total ?? 0) && (
                 <p className="text-xs text-muted-foreground">
-                  已隱藏重複提交，顯示每位學生最後一次繳交
+                  {t("pages.assignmentDetail.hiddenDuplicates")}
                 </p>
               )}
             {hasActiveSubmissions && (
               <p className="text-xs text-muted-foreground">
-                {submissionsRefreshCountdown} 秒後更新
+                {t("pages.assignmentDetail.refreshIn", {
+                  seconds: submissionsRefreshCountdown,
+                })}
               </p>
             )}
           </div>
@@ -196,27 +224,29 @@ export function AssignmentDetailPage() {
                 onChange={(e) => setShowLatestOnly(e.target.checked)}
                 className="h-4 w-4 rounded border-border"
               />
-              僅看每人最新
+              {t("pages.assignmentDetail.latestOnly")}
             </label>
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("list")}
             >
-              列表
+              {t("pages.assignmentDetail.list")}
             </Button>
             <Button
               variant={viewMode === "grid" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("grid")}
             >
-              網格
+              {t("pages.assignmentDetail.grid")}
             </Button>
           </div>
         </div>
 
         {visibleSubmissions.length === 0 && (
-          <p className="text-muted-foreground">尚無繳交紀錄</p>
+          <p className="text-muted-foreground">
+            {t("pages.assignmentDetail.noSubmissions")}
+          </p>
         )}
 
         {visibleSubmissions.length > 0 &&

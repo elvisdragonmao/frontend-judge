@@ -2,11 +2,14 @@ import { Link, Outlet, useNavigate } from "react-router";
 import { useAuth } from "@/stores/auth";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { isStaff } from "@judge/shared";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export function AppLayout() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       {/* Navbar */}
       <header className="border-b border-border">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
@@ -51,20 +54,21 @@ export function AppLayout() {
                   to="/classes"
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  班級
+                  {t("layout.nav.classes")}
                 </Link>
                 {isStaff(user.role) && (
                   <Link
                     to="/admin"
                     className="text-muted-foreground transition-colors hover:text-foreground"
                   >
-                    管理
+                    {t("layout.nav.admin")}
                   </Link>
                 )}
               </nav>
             )}
           </div>
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             <Button
               variant="ghost"
               size="sm"
@@ -77,7 +81,7 @@ export function AppLayout() {
                       : "dark",
                 )
               }
-              aria-label="切換深色模式"
+              aria-label={t("layout.theme.toggle")}
             >
               {theme === "dark" ? "🌑" : theme === "light" ? "☀️" : "💻"}
             </Button>
@@ -90,7 +94,7 @@ export function AppLayout() {
                   {user.displayName}
                 </Link>
                 <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  登出
+                  {t("layout.nav.logout")}
                 </Button>
               </>
             )}
@@ -99,9 +103,23 @@ export function AppLayout() {
       </header>
 
       {/* Main content */}
-      <main className="mx-auto max-w-6xl px-4 py-6 overflow-hidden">
+      <main className="mx-auto w-full max-w-6xl flex-1 overflow-hidden px-4 py-6">
         <Outlet />
       </main>
+
+      <footer className="border-t border-border/70 bg-background/80">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <p>emjudge 2026</p>
+          <a
+            href="https://github.com/elvisdragonmao/emjudge/"
+            target="_blank"
+            rel="noreferrer"
+            className="transition-colors hover:text-foreground"
+          >
+            GitHub
+          </a>
+        </div>
+      </footer>
     </div>
   );
 }

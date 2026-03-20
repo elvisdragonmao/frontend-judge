@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/layouts/app-layout";
 import { AuthGuard } from "@/layouts/auth-guard";
 
@@ -45,9 +46,11 @@ const AdminPage = lazy(() =>
 );
 
 function PageFallback() {
+  const { t } = useTranslation();
+
   return (
     <div className="flex items-center justify-center h-screen">
-      <p className="text-muted-foreground">載入中...</p>
+      <p className="text-muted-foreground">{t("common.loading")}</p>
     </div>
   );
 }

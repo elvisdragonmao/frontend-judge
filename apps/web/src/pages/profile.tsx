@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { PageTitle } from "@/components/page-title";
 import { useAuth } from "@/stores/auth";
 import { updateUser } from "@/stores/auth";
@@ -8,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function ProfilePage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const updateProfileMutation = useUpdateProfile();
   const changePasswordMutation = useChangePassword();
@@ -25,9 +27,10 @@ export function ProfilePage() {
       {
         onSuccess: () => {
           updateUser({ displayName });
-          setProfileMsg("暱稱已更新");
+          setProfileMsg(t("pages.profile.displayNameUpdated"));
         },
-        onError: () => setProfileMsg("更新失敗"),
+        onError: () =>
+          setProfileMsg(t("pages.profile.displayNameUpdateFailed")),
       },
     );
   };
@@ -38,38 +41,46 @@ export function ProfilePage() {
       { currentPassword, newPassword },
       {
         onSuccess: () => {
-          setPasswordMsg("密碼已更新");
+          setPasswordMsg(t("pages.profile.passwordUpdated"));
           setCurrentPassword("");
           setNewPassword("");
         },
-        onError: () => setPasswordMsg("密碼更新失敗，請檢查目前密碼是否正確"),
+        onError: () => setPasswordMsg(t("pages.profile.passwordUpdateFailed")),
       },
     );
   };
 
   return (
     <div className="space-y-6">
-      <PageTitle title="個人設定" />
-      <h1 className="text-2xl font-bold">個人設定</h1>
+      <PageTitle title={t("pages.profile.title")} />
+      <h1 className="text-2xl font-bold">{t("pages.profile.title")}</h1>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Profile info */}
         <Card>
           <CardHeader>
-            <CardTitle>帳號資訊</CardTitle>
+            <CardTitle>{t("pages.profile.accountInfo")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <span className="text-sm text-muted-foreground">帳號:</span>{" "}
+              <span className="text-sm text-muted-foreground">
+                {t("pages.profile.username")}:
+              </span>{" "}
               <span className="text-sm font-medium">{user?.username}</span>
             </div>
             <div>
-              <span className="text-sm text-muted-foreground">角色:</span>{" "}
-              <span className="text-sm font-medium">{user?.role}</span>
+              <span className="text-sm text-muted-foreground">
+                {t("pages.profile.role")}:
+              </span>{" "}
+              <span className="text-sm font-medium">
+                {user?.role ? t(`pages.profile.roles.${user.role}`) : ""}
+              </span>
             </div>
             <form onSubmit={handleUpdateProfile} className="space-y-3 pt-2">
               <div className="space-y-2">
-                <label className="text-sm font-medium">暱稱</label>
+                <label className="text-sm font-medium">
+                  {t("pages.profile.displayName")}
+                </label>
                 <Input
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
@@ -83,7 +94,7 @@ export function ProfilePage() {
                 size="sm"
                 disabled={updateProfileMutation.isPending}
               >
-                更新暱稱
+                {t("pages.profile.updateDisplayName")}
               </Button>
             </form>
           </CardContent>
@@ -92,12 +103,14 @@ export function ProfilePage() {
         {/* Change password */}
         <Card>
           <CardHeader>
-            <CardTitle>修改密碼</CardTitle>
+            <CardTitle>{t("pages.profile.changePassword")}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleChangePassword} className="space-y-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium">目前密碼</label>
+                <label className="text-sm font-medium">
+                  {t("pages.profile.currentPassword")}
+                </label>
                 <Input
                   type="password"
                   value={currentPassword}
@@ -105,7 +118,9 @@ export function ProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">新密碼</label>
+                <label className="text-sm font-medium">
+                  {t("pages.profile.newPassword")}
+                </label>
                 <Input
                   type="password"
                   value={newPassword}
@@ -121,7 +136,7 @@ export function ProfilePage() {
                 size="sm"
                 disabled={changePasswordMutation.isPending}
               >
-                更新密碼
+                {t("pages.profile.updatePassword")}
               </Button>
             </form>
           </CardContent>

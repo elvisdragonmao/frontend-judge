@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   TEST_TEMPLATES,
   TEMPLATE_CATEGORIES,
@@ -18,6 +19,7 @@ export function TestTemplatePicker({
   assignmentType,
   onApply,
 }: TestTemplatePickerProps) {
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<TestTemplate | null>(
     null,
@@ -25,21 +27,19 @@ export function TestTemplatePicker({
   const [params, setParams] = useState<Record<string, string>>({});
   const [preview, setPreview] = useState<string | null>(null);
 
-  // Filter templates by assignment type
-  const available = TEST_TEMPLATES.filter((t) =>
-    t.applicableTo.includes(assignmentType),
+  const available = TEST_TEMPLATES.filter((template) =>
+    template.applicableTo.includes(assignmentType),
   );
 
-  const categories = TEMPLATE_CATEGORIES.filter((cat) =>
-    available.some((t) => t.category === cat.id),
+  const categories = TEMPLATE_CATEGORIES.filter((category) =>
+    available.some((template) => template.category === category.id),
   );
 
   const handleSelect = useCallback((template: TestTemplate) => {
     setSelectedTemplate(template);
-    // Initialize params with defaults
     const defaults: Record<string, string> = {};
-    for (const p of template.params) {
-      defaults[p.key] = p.defaultValue;
+    for (const param of template.params) {
+      defaults[param.key] = param.defaultValue;
     }
     setParams(defaults);
     setPreview(null);
@@ -47,14 +47,12 @@ export function TestTemplatePicker({
 
   const handlePreview = useCallback(() => {
     if (!selectedTemplate) return;
-    const code = selectedTemplate.generate(params);
-    setPreview(code);
+    setPreview(selectedTemplate.generate(params));
   }, [selectedTemplate, params]);
 
   const handleApply = useCallback(() => {
     if (!selectedTemplate) return;
-    const code = selectedTemplate.generate(params);
-    onApply(code);
+    onApply(selectedTemplate.generate(params));
     setSelectedTemplate(null);
     setPreview(null);
     setActiveCategory(null);
@@ -62,37 +60,65 @@ export function TestTemplatePicker({
 
   const handleAppendApply = useCallback(() => {
     if (!selectedTemplate) return;
-    const code = selectedTemplate.generate(params);
-    // Append mode: pass code with a marker so parent can append
-    onApply("\n" + code);
+    onApply(`\n${selectedTemplate.generate(params)}`);
     setSelectedTemplate(null);
     setPreview(null);
   }, [selectedTemplate, params, onApply]);
 
+  const getTemplateName = (template: TestTemplate) =>
+    t(`templatePicker.templates.${template.id}.name`, {
+      defaultValue: template.name,
+    });
+
+  const getTemplateDescription = (template: TestTemplate) =>
+    t(`templatePicker.templates.${template.id}.description`, {
+      defaultValue: template.description,
+    });
+
+  const getParamLabel = (
+    template: TestTemplate,
+    key: string,
+    fallback: string,
+  ) =>
+    t(`templatePicker.templates.${template.id}.params.${key}.label`, {
+      defaultValue: fallback,
+    });
+
+  const getParamPlaceholder = (
+    template: TestTemplate,
+    key: string,
+    fallback: string,
+  ) =>
+    t(`templatePicker.templates.${template.id}.params.${key}.placeholder`, {
+      defaultValue: fallback,
+    });
+
   return (
     <div className="space-y-4">
-      {/* Category tabs */}
       <div className="flex flex-wrap gap-2">
-        {categories.map((cat) => (
+        {categories.map((category) => (
           <Button
-            key={cat.id}
+            key={category.id}
             type="button"
-            variant={activeCategory === cat.id ? "default" : "outline"}
+            variant={activeCategory === category.id ? "default" : "outline"}
             size="sm"
             onClick={() =>
-              setActiveCategory(activeCategory === cat.id ? null : cat.id)
+              setActiveCategory(
+                activeCategory === category.id ? null : category.id,
+              )
             }
           >
-            {cat.name}
+            {t(`templatePicker.categories.${category.id}`, {
+              defaultValue: category.name,
+            })}
           </Button>
         ))}
       </div>
 
-      {/* Template list */}
       {activeCategory && (
         <div className="grid gap-2 md:grid-cols-2">
           {available
-            .filter((t) => t.category === activeCategory)
+            .filter((template) => template.category === activeCategory)
             .map((template) => (
               <Card
                 key={template.id}
@@ -106,15 +132,19 @@ export function TestTemplatePicker({
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-medium">{template.name}</p>
+                      <p className="text-sm font-medium">
+                        {getTemplateName(template)}
+                      </p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {template.description}
+                        {getTemplateDescription(template)}
                       </p>
                     </div>
                     <Badge variant="secondary" className="ml-2 shrink-0">
                       {template.params.length > 0
-                        ? `${template.params.length} 個參數`
-                        : "無需設定"}
+                        ? t("templatePicker.paramCount", {
+                            count: template.params.length,
+                          })
+                        : t("templatePicker.noConfig")}
                     </Badge>
                   </div>
                 </CardContent>
@@ -123,41 +153,52 @@ export function TestTemplatePicker({
         </div>
       )}
 
-      {/* Parameter form */}
       {selectedTemplate && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              {selectedTemplate.name} — 參數設定
+              {t("templatePicker.paramSettings", {
+                name: getTemplateName(selectedTemplate),
+              })}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {selectedTemplate.params.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                此模板不需要額外設定。
+                {t("templatePicker.noExtraSettings")}
               </p>
             )}
 
-            {selectedTemplate.params.map((p) => (
-              <div key={p.key} className="space-y-1">
-                <label className="text-sm font-medium">{p.label}</label>
-                {p.type === "textarea" ? (
+            {selectedTemplate.params.map((param) => (
+              <div key={param.key} className="space-y-1">
+                <label className="text-sm font-medium">
+                  {getParamLabel(selectedTemplate, param.key, param.label)}
+                </label>
+                {param.type === "textarea" ? (
                   <textarea
-                    value={params[p.key] ?? ""}
-                    onChange={(e) =>
-                      setParams({ ...params, [p.key]: e.target.value })
+                    value={params[param.key] ?? ""}
+                    onChange={(event) =>
+                      setParams({ ...params, [param.key]: event.target.value })
                     }
-                    placeholder={p.placeholder}
+                    placeholder={getParamPlaceholder(
+                      selectedTemplate,
+                      param.key,
+                      param.placeholder,
+                    )}
                     className="min-h-[80px] w-full rounded-md border border-border bg-transparent px-3 py-2 font-mono text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   />
                 ) : (
                   <Input
-                    type={p.type === "number" ? "number" : "text"}
-                    value={params[p.key] ?? ""}
-                    onChange={(e) =>
-                      setParams({ ...params, [p.key]: e.target.value })
+                    type={param.type === "number" ? "number" : "text"}
+                    value={params[param.key] ?? ""}
+                    onChange={(event) =>
+                      setParams({ ...params, [param.key]: event.target.value })
                     }
-                    placeholder={p.placeholder}
+                    placeholder={getParamPlaceholder(
+                      selectedTemplate,
+                      param.key,
+                      param.placeholder,
+                    )}
                   />
                 )}
               </div>
@@ -170,10 +211,10 @@ export function TestTemplatePicker({
                 variant="outline"
                 onClick={handlePreview}
               >
-                預覽程式碼
+                {t("templatePicker.previewCode")}
               </Button>
               <Button type="button" size="sm" onClick={handleApply}>
-                覆蓋套用
+                {t("templatePicker.applyReplace")}
               </Button>
               <Button
                 type="button"
@@ -181,14 +222,15 @@ export function TestTemplatePicker({
                 variant="secondary"
                 onClick={handleAppendApply}
               >
-                追加套用
+                {t("templatePicker.applyAppend")}
               </Button>
             </div>
 
-            {/* Preview */}
             {preview && (
               <div className="space-y-2">
-                <p className="text-sm font-medium">產生的測試程式碼：</p>
+                <p className="text-sm font-medium">
+                  {t("templatePicker.generatedCode")}
+                </p>
                 <pre className="max-h-60 overflow-auto rounded bg-muted p-3 text-xs">
                   {preview}
                 </pre>
