@@ -25,6 +25,7 @@ export function prepareSharedPnpmStore(
   cleanupHourTw: number,
 ): { cleaned: boolean; cleanupKey: string } {
   fs.mkdirSync(storeDir, { recursive: true });
+  fs.chmodSync(storeDir, 0o777);
 
   const cleanupKey = getCleanupWindowKey(new Date(), cleanupHourTw);
   const markerPath = path.join(storeDir, CLEANUP_MARKER_FILE);
@@ -41,5 +42,6 @@ export function prepareSharedPnpmStore(
   }
 
   fs.writeFileSync(markerPath, cleanupKey, "utf-8");
+  fs.chmodSync(storeDir, 0o777);
   return { cleaned: true, cleanupKey };
 }

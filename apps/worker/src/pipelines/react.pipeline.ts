@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import net from "node:net";
 import path from "node:path";
 import {
   isSubmissionPathAllowed,
@@ -33,12 +34,16 @@ export class ReactPipeline implements JudgePipeline {
     const testDir = path.join(workDir, "tests");
     const artifactsDir = path.join(workDir, "artifacts");
     const pnpmStoreMountPath = config.JUDGE_PNPM_STORE_MOUNT_PATH;
+    const blockedPaths = spec.blockedPaths.filter(
+      (pattern) => pattern !== "package.json",
+    );
+    const webServerPort = await this.findAvailablePort();
     const reactWebServerCommand =
       "cd project && ls && " +
       "if [ -d dist ]; then " +
-      "echo 'Serving from dist' && npx serve -s dist -l 3000; " +
+      `echo 'Serving from dist on ${webServerPort}' && npx serve -s dist -l ${webServerPort}; ` +
       "elif [ -d build ]; then " +
-      "echo 'Serving from build' && npx serve -s build -l 3000; " +
+      `echo 'Serving from build on ${webServerPort}' && npx serve -s build -l ${webServerPort}; ` +
       "else " +
       "echo 'No dist/ or build/ directory found after build' >&2; exit 1; " +
       "fi";
@@ -47,6 +52,8 @@ export class ReactPipeline implements JudgePipeline {
     fs.mkdirSync(testDir, { recursive: true });
     fs.mkdirSync(artifactsDir, { recursive: true });
     fs.chmodSync(workDir, 0o777);
+    fs.chmodSync(projectDir, 0o777);
+    fs.chmodSync(testDir, 0o777);
     fs.chmodSync(artifactsDir, 0o777);
 
     // 1. Download student files — only allowed paths
@@ -70,7 +77,7 @@ export class ReactPipeline implements JudgePipeline {
         !isSubmissionPathAllowed(
           normalizedPath,
           spec.allowedPaths,
-          spec.blockedPaths,
+          blockedPaths,
         )
       ) {
         continue;
@@ -107,12 +114,12 @@ export default defineConfig({
   outputDir: './artifacts',
   timeout: ${spec.timeoutMs},
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://127.0.0.1:${webServerPort}',
     screenshot: 'on',
   },
   webServer: {
     command: ${JSON.stringify(`bash -lc ${JSON.stringify(reactWebServerCommand)}`)},
-    port: 3000,
+    port: ${webServerPort},
     reuseExistingServer: false,
     timeout: ${totalTimeoutMs},
     stdout: 'pipe',
@@ -142,6 +149,7 @@ export default defineConfig({
       submissionId,
       appendLog,
       `bash -lc ${JSON.stringify(`mkdir -p /work/artifacts && mkdir -p ${pnpmStoreMountPath} && cd project && set -o pipefail && pnpm config set store-dir ${pnpmStoreMountPath} >/dev/null && if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; else pnpm install --no-frozen-lockfile; fi 2>&1 | tee /work/artifacts/react-install.log`)}`,
+      true,
     );
     await appendLog("✅ Dependencies installed");
 
@@ -152,6 +160,7 @@ export default defineConfig({
       submissionId,
       appendLog,
       'bash -lc "mkdir -p /work/artifacts && cd project && set -o pipefail && pnpm run build 2>&1 | tee /work/artifacts/react-build.log"',
+      true,
     );
     await appendLog("✅ Project build finished");
 
@@ -187,6 +196,7 @@ export default defineConfig({
     submissionId: string,
     appendLog: (message: string) => Promise<void>,
     command: string,
+    rejectOnNonZero = false,
   ): Promise<string> {
     return new Promise((resolve, reject) => {
       const args = [
@@ -295,11 +305,41 @@ export default defineConfig({
         }
 
         if (code !== 0) {
+          if (rejectOnNonZero) {
+            reject(new Error(`[Docker execution]\n${output}`));
+            return;
+          }
+
           resolve(`[Docker execution]\n${output}`);
           return;
         }
 
         resolve(output);
+      });
+    });
+  }
+
+  private findAvailablePort(): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const server = net.createServer();
+
+      server.unref();
+      server.on("error", reject);
+      server.listen(0, "127.0.0.1", () => {
+        const address = server.address();
+        if (!address || typeof address === "string") {
+          server.close(() => reject(new Error("Failed to allocate port")));
+          return;
+        }
+
+        const { port } = address;
+        server.close((err) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve(port);
+        });
       });
     });
   }
