@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { Eye, Replace, Plus } from "@/lib/icons";
 import { useTranslation } from "react-i18next";
 import {
   TEST_TEMPLATES,
@@ -211,9 +212,11 @@ export function TestTemplatePicker({
                 variant="outline"
                 onClick={handlePreview}
               >
+                <Eye />
                 {t("templatePicker.previewCode")}
               </Button>
               <Button type="button" size="sm" onClick={handleApply}>
+                <Replace />
                 {t("templatePicker.applyReplace")}
               </Button>
               <Button
@@ -222,6 +225,7 @@ export function TestTemplatePicker({
                 variant="secondary"
                 onClick={handleAppendApply}
               >
+                <Plus />
                 {t("templatePicker.applyAppend")}
               </Button>
             </div>

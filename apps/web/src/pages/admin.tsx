@@ -1,4 +1,13 @@
 import { useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  KeyRound,
+  Plus,
+  Upload,
+  X,
+} from "@/lib/icons";
 import { useTranslation } from "react-i18next";
 import {
   useUsers,
@@ -95,6 +104,7 @@ export function AdminPage() {
 
       <div className="flex gap-2">
         <Button size="sm" onClick={() => setShowCreateUser(!showCreateUser)}>
+          <Plus />
           {t("pages.admin.createUser")}
         </Button>
         <Button
@@ -102,6 +112,7 @@ export function AdminPage() {
           variant="outline"
           onClick={() => setShowBulkImport(!showBulkImport)}
         >
+          {showBulkImport ? <X /> : <Upload />}
           {t("pages.admin.bulkImport")}
         </Button>
       </div>
@@ -151,6 +162,7 @@ export function AdminPage() {
                 size="sm"
                 disabled={createUserMutation.isPending}
               >
+                <Plus />
                 {t("pages.admin.create")}
               </Button>
             </form>
@@ -180,6 +192,7 @@ export function AdminPage() {
               onClick={handleBulkImport}
               disabled={bulkImportMutation.isPending}
             >
+              <Download />
               {t("pages.admin.import")}
             </Button>
             {bulkImportMutation.isSuccess && (
@@ -253,6 +266,7 @@ export function AdminPage() {
                         onClick={() => handleResetPassword(user.id)}
                         disabled={resetPasswordMutation.isPending}
                       >
+                        <KeyRound />
                         {t("common.confirm")}
                       </Button>
                       <Button
@@ -260,6 +274,7 @@ export function AdminPage() {
                         variant="ghost"
                         onClick={() => setResetUserId(null)}
                       >
+                        <X />
                         {t("common.cancel")}
                       </Button>
                     </div>
@@ -269,6 +284,7 @@ export function AdminPage() {
                       variant="ghost"
                       onClick={() => setResetUserId(user.id)}
                     >
+                      <KeyRound />
                       {t("pages.admin.resetPassword")}
                     </Button>
                   )}
@@ -285,6 +301,7 @@ export function AdminPage() {
                 disabled={page === 1}
                 onClick={() => setPage(page - 1)}
               >
+                <ChevronLeft />
                 {t("pages.admin.previousPage")}
               </Button>
               <span className="flex items-center text-sm text-muted-foreground">
@@ -297,6 +314,7 @@ export function AdminPage() {
                 onClick={() => setPage(page + 1)}
               >
                 {t("pages.admin.nextPage")}
+                <ChevronRight />
               </Button>
             </div>
           )}

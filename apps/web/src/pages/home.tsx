@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { ArrowRight, BookOpen, LogIn, Sparkles } from "@/lib/icons";
 import { useTranslation } from "react-i18next";
 import { PageTitle } from "@/components/page-title";
 import { useAuth } from "@/stores/auth";
@@ -30,6 +31,7 @@ export function HomePage() {
 
       <section className="mx-auto flex max-w-5xl flex-col items-center gap-6 py-20 text-center">
         <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground shadow-sm">
+          <Sparkles className="size-3.5" />
           {t("pages.home.heroTag")}
         </div>
         <h1 className="animate-fade-up delay-1 text-4xl font-semibold tracking-tight sm:text-5xl">
@@ -41,15 +43,24 @@ export function HomePage() {
         <div className="animate-fade-up delay-3 flex flex-wrap items-center justify-center gap-3">
           {isAuthenticated ? (
             <Button asChild>
-              <Link to="/classes">{t("pages.home.enterClasses")}</Link>
+              <Link to="/classes">
+                <BookOpen />
+                {t("pages.home.enterClasses")}
+              </Link>
             </Button>
           ) : (
             <Button asChild>
-              <Link to="/login">{t("pages.home.login")}</Link>
+              <Link to="/login">
+                <LogIn />
+                {t("pages.home.login")}
+              </Link>
             </Button>
           )}
           <Button variant="outline" asChild>
-            <Link to="/classes">{t("pages.home.browseClasses")}</Link>
+            <Link to="/classes">
+              <ArrowRight />
+              {t("pages.home.browseClasses")}
+            </Link>
           </Button>
         </div>
       </section>
@@ -79,10 +90,16 @@ export function HomePage() {
           </div>
           <div className="mt-4 flex gap-3 md:mt-0">
             <Button variant="secondary" asChild>
-              <Link to="/classes">{t("pages.home.ctaPrimary")}</Link>
+              <Link to="/classes">
+                <BookOpen />
+                {t("pages.home.ctaPrimary")}
+              </Link>
             </Button>
             <Button variant="ghost" asChild>
-              <Link to="/login">{t("pages.home.ctaSecondary")}</Link>
+              <Link to="/login">
+                <LogIn />
+                {t("pages.home.ctaSecondary")}
+              </Link>
             </Button>
           </div>
         </div>

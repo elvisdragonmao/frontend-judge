@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Code2, Eye, FileCode2, Save, Sparkles, X } from "@/lib/icons";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_REACT_ASSIGNMENT_SPEC } from "@judge/shared";
 import { useNavigate, useParams } from "react-router";
@@ -149,6 +150,7 @@ export function AssignmentEditPage() {
                   size="sm"
                   onClick={() => setType("html-css-js")}
                 >
+                  <Code2 />
                   {t("assignmentTypes.html-css-js")}
                 </Button>
                 <Button
@@ -157,6 +159,7 @@ export function AssignmentEditPage() {
                   size="sm"
                   onClick={() => setType("react")}
                 >
+                  <FileCode2 />
                   {t("assignmentTypes.react")}
                 </Button>
               </div>
@@ -233,6 +236,7 @@ export function AssignmentEditPage() {
                 size="sm"
                 onClick={() => setShowPreview(!showPreview)}
               >
+                {showPreview ? <Code2 /> : <Eye />}
                 {showPreview ? t("common.edit") : t("common.preview")}
               </Button>
             </div>
@@ -263,6 +267,7 @@ export function AssignmentEditPage() {
                 size="sm"
                 onClick={() => setShowTemplatePicker(!showTemplatePicker)}
               >
+                <Sparkles />
                 {showTemplatePicker
                   ? t("pages.assignmentForm.hideTemplates")
                   : t("pages.assignmentForm.showTemplates")}
@@ -293,9 +298,11 @@ export function AssignmentEditPage() {
 
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+            <X />
             {t("common.cancel")}
           </Button>
           <Button type="submit" disabled={updateMutation.isPending}>
+            <Save />
             {updateMutation.isPending
               ? t("pages.assignmentEdit.updating")
               : t("pages.assignmentEdit.submit")}

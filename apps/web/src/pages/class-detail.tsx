@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Plus, UserMinus, UserPlus, Users, X } from "@/lib/icons";
 import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router";
 import {
@@ -85,6 +86,7 @@ export function ClassDetailPage() {
         {user && isStaff(user.role) && (
           <Button asChild size="sm">
             <Link to={`/classes/${id}/assignments/new`}>
+              <Plus />
               {t("pages.classDetail.newAssignment")}
             </Link>
           </Button>
@@ -155,6 +157,7 @@ export function ClassDetailPage() {
               variant={showAddMember ? "outline" : "default"}
               onClick={() => setShowAddMember(!showAddMember)}
             >
+              {showAddMember ? <X /> : <Users />}
               {showAddMember
                 ? t("pages.classDetail.collapse")
                 : t("pages.classDetail.addMembers")}
@@ -199,6 +202,7 @@ export function ClassDetailPage() {
                         onClick={() => handleAddMember(candidate.id)}
                         disabled={addMembersMutation.isPending}
                       >
+                        <UserPlus />
                         {t("pages.classDetail.join")}
                       </Button>
                     </div>
@@ -235,6 +239,7 @@ export function ClassDetailPage() {
                     onClick={() => handleRemoveMember(member.id)}
                     disabled={removeMemberMutation.isPending}
                   >
+                    <UserMinus />
                     {t("pages.classDetail.remove")}
                   </Button>
                 </span>

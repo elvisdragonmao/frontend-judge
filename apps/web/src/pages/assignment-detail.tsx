@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { LayoutGrid, List, PencilLine } from "@/lib/icons";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
 import {
@@ -137,6 +138,7 @@ export function AssignmentDetailPage() {
           {user && isStaff(user.role) && (
             <Button asChild size="sm" variant="outline">
               <Link to={`/assignments/${assignment.id}/edit`}>
+                <PencilLine />
                 {t("pages.assignmentDetail.editAssignment")}
               </Link>
             </Button>
@@ -231,6 +233,7 @@ export function AssignmentDetailPage() {
               size="sm"
               onClick={() => setViewMode("list")}
             >
+              <List />
               {t("pages.assignmentDetail.list")}
             </Button>
             <Button
@@ -238,6 +241,7 @@ export function AssignmentDetailPage() {
               size="sm"
               onClick={() => setViewMode("grid")}
             >
+              <LayoutGrid />
               {t("pages.assignmentDetail.grid")}
             </Button>
           </div>

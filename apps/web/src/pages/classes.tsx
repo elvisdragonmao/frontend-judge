@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { Plus, X } from "@/lib/icons";
 import { useTranslation } from "react-i18next";
 import { PageTitle } from "@/components/page-title";
 import { useAuth } from "@/stores/auth";
@@ -45,6 +46,7 @@ export function ClassesPage() {
         <h1 className="text-2xl font-bold">{t("pages.classes.title")}</h1>
         {user && isStaff(user.role) && (
           <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
+            {showCreate ? <X /> : <Plus />}
             {showCreate
               ? t("pages.classes.cancelCreate")
               : t("pages.classes.createClass")}
@@ -68,6 +70,7 @@ export function ClassesPage() {
                 onChange={(e) => setDescription(e.target.value)}
               />
               <Button type="submit" disabled={createClassMutation.isPending}>
+                <Plus />
                 {t("pages.classes.create")}
               </Button>
             </form>

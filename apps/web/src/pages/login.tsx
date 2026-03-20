@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LogIn } from "@/lib/icons";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { PageTitle } from "@/components/page-title";
@@ -72,6 +73,7 @@ export function LoginPage() {
               className="w-full"
               disabled={loginMutation.isPending}
             >
+              <LogIn />
               {loginMutation.isPending
                 ? t("pages.login.submitting")
                 : t("pages.login.submit")}

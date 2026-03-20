@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { FolderOpen, Send, Upload } from "@/lib/icons";
 import { useTranslation } from "react-i18next";
 import { normalizeSubmissionPath, shouldIgnoreUploadPath } from "@judge/shared";
 import { Button } from "@/components/ui/button";
@@ -107,6 +108,7 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
           >
+            <Upload />
             {t("components.fileUploader.chooseFiles")}
           </Button>
 
@@ -129,6 +131,7 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
             onClick={() => folderInputRef.current?.click()}
             disabled={isLoading}
           >
+            <FolderOpen />
             {t("components.fileUploader.chooseFolder")}
           </Button>
         </div>
@@ -152,6 +155,7 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
             ))}
           </div>
           <Button size="sm" onClick={handleSubmit} disabled={isLoading}>
+            <Send />
             {isLoading
               ? t("components.fileUploader.uploading")
               : t("components.fileUploader.submit")}

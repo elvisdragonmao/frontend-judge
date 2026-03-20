@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { ArrowLeft, Download, RotateCcw } from "@/lib/icons";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
 import { useRejudgeSubmission, useSubmissionDetail } from "@/hooks/use-api";
@@ -143,6 +144,7 @@ export function SubmissionDetailPage() {
       <div>
         <Button asChild variant="outline" size="sm" className="mb-3">
           <Link to={`/assignments/${submission.assignmentId}`}>
+            <ArrowLeft />
             {t("pages.submissionDetail.backToAssignment")}
           </Link>
         </Button>
@@ -165,6 +167,7 @@ export function SubmissionDetailPage() {
             onClick={() => rejudgeMutation.mutate()}
             disabled={rejudgeMutation.isPending || isInQueue}
           >
+            <RotateCcw />
             {rejudgeMutation.isPending
               ? t("pages.submissionDetail.rejudging")
               : t("pages.submissionDetail.rejudge")}
@@ -241,6 +244,7 @@ export function SubmissionDetailPage() {
                       onClick={() => handleDownloadFile(file.id)}
                       disabled={downloadingFileId === file.id}
                     >
+                      <Download />
                       {downloadingFileId === file.id
                         ? t("pages.submissionDetail.downloading")
                         : t("pages.submissionDetail.download")}

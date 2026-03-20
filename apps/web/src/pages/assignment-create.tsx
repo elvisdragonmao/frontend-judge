@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { Code2, Eye, FileCode2, Save, Sparkles, X } from "@/lib/icons";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_REACT_ASSIGNMENT_SPEC } from "@judge/shared";
 import { useParams, useNavigate } from "react-router";
@@ -114,6 +115,7 @@ export function AssignmentCreatePage() {
                   size="sm"
                   onClick={() => setType("html-css-js")}
                 >
+                  <Code2 />
                   {t("assignmentTypes.html-css-js")}
                 </Button>
                 <Button
@@ -122,6 +124,7 @@ export function AssignmentCreatePage() {
                   size="sm"
                   onClick={() => setType("react")}
                 >
+                  <FileCode2 />
                   {t("assignmentTypes.react")}
                 </Button>
               </div>
@@ -165,6 +168,7 @@ export function AssignmentCreatePage() {
                 size="sm"
                 onClick={() => setShowPreview(!showPreview)}
               >
+                {showPreview ? <Code2 /> : <Eye />}
                 {showPreview ? t("common.edit") : t("common.preview")}
               </Button>
             </div>
@@ -195,6 +199,7 @@ export function AssignmentCreatePage() {
                 size="sm"
                 onClick={() => setShowTemplatePicker(!showTemplatePicker)}
               >
+                <Sparkles />
                 {showTemplatePicker
                   ? t("pages.assignmentForm.hideTemplates")
                   : t("pages.assignmentForm.showTemplates")}
@@ -230,9 +235,11 @@ export function AssignmentCreatePage() {
 
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+            <X />
             {t("common.cancel")}
           </Button>
           <Button type="submit" disabled={createMutation.isPending}>
+            <Save />
             {createMutation.isPending
               ? t("pages.assignmentCreate.creating")
               : t("pages.assignmentCreate.submit")}

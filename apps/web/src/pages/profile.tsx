@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { KeyRound, Save } from "@/lib/icons";
 import { useTranslation } from "react-i18next";
 import { PageTitle } from "@/components/page-title";
 import { useAuth } from "@/stores/auth";
@@ -94,6 +95,7 @@ export function ProfilePage() {
                 size="sm"
                 disabled={updateProfileMutation.isPending}
               >
+                <Save />
                 {t("pages.profile.updateDisplayName")}
               </Button>
             </form>
@@ -136,6 +138,7 @@ export function ProfilePage() {
                 size="sm"
                 disabled={changePasswordMutation.isPending}
               >
+                <KeyRound />
                 {t("pages.profile.updatePassword")}
               </Button>
             </form>

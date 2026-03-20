@@ -1,4 +1,5 @@
 import { Link, Outlet, useNavigate } from "react-router";
+import { Laptop, LogOut, Moon, Sun } from "@/lib/icons";
 import { useAuth } from "@/stores/auth";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -83,7 +84,13 @@ export function AppLayout() {
               }
               aria-label={t("layout.theme.toggle")}
             >
-              {theme === "dark" ? "🌑" : theme === "light" ? "☀️" : "💻"}
+              {theme === "dark" ? (
+                <Moon />
+              ) : theme === "light" ? (
+                <Sun />
+              ) : (
+                <Laptop />
+              )}
             </Button>
             {user && (
               <>
@@ -94,6 +101,7 @@ export function AppLayout() {
                   {user.displayName}
                 </Link>
                 <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut />
                   {t("layout.nav.logout")}
                 </Button>
               </>
