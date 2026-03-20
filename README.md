@@ -1,9 +1,5 @@
 <div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="apps/web/public/emjudge.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="apps/web/public/emjudge-dark.svg" />
-    <img alt="emjudge logo" src="https://elvismao.com/logo.svg" width="200" />
-  </picture>
+    <img alt="emjudge logo" src="apps/web/public/emjudge.svg" width="200" />
 
   <h1>emjudge</h1>
   <p>Frontend assignment submission and automated grading for HTML, CSS, JavaScript, and React projects.</p>

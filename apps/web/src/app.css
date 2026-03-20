@@ -50,9 +50,7 @@
 
 body {
 	font-family: "Space Grotesk", "Noto Sans TC", "Segoe UI", sans-serif;
-	background:
-		radial-gradient(circle at top, color-mix(in srgb, var(--catppuccin-color-blue) 12%, transparent) 0%, transparent 42%),
-		radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--catppuccin-color-mauve) 10%, transparent) 0%, transparent 35%), var(--color-background);
+	background-color: var(--color-background);
 	color: var(--color-foreground);
 }
 

@@ -287,7 +287,7 @@
 		"home": {
 			"title": "首页",
 			"heroTag": "Playwright 驱动的自动评测",
-			"heroDescription": "前端作业提交与自动评测平台。上传你的 HTML / CSS / JS 或 React 作业，系统会自动执行 Playwright 测试并生成分数、截图与评测报告。",
+			"heroDescription": "前端作业提交与自动评测平台。",
 			"enterClasses": "进入班级",
 			"login": "登录",
 			"browseClasses": "查看班级",

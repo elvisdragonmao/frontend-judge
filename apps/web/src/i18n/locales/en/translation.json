@@ -287,7 +287,7 @@
 		"home": {
 			"title": "Home",
 			"heroTag": "Playwright-powered auto grading",
-			"heroDescription": "A frontend assignment submission and auto-grading platform. Upload your HTML / CSS / JS or React work, and the system runs Playwright tests automatically to produce scores, screenshots, and grading reports.",
+			"heroDescription": "A frontend assignment submission and auto-grading platform.",
 			"enterClasses": "Go to classes",
 			"login": "Log in",
 			"browseClasses": "Browse classes",

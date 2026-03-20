@@ -34,7 +34,9 @@ export function HomePage() {
 					<Sparkles className="size-3.5" />
 					{t("pages.home.heroTag")}
 				</div>
-				<h1 className="animate-fade-up delay-1 text-4xl font-semibold tracking-tight sm:text-5xl">emjudge</h1>
+				<h1 className="animate-fade-up delay-1">
+					<img src="/emjudge.svg" alt="emjudge" className="mx-auto mb-4 h-12" />
+				</h1>
 				<p className="animate-fade-up delay-2 max-w-2xl text-base text-muted-foreground sm:text-lg">{t("pages.home.heroDescription")}</p>
 				<div className="animate-fade-up delay-3 flex flex-wrap items-center justify-center gap-3">
 					{isAuthenticated ? (

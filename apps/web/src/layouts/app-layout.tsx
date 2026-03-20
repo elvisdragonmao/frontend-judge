@@ -44,8 +44,8 @@ export function AppLayout() {
 			<header className="border-b border-border">
 				<div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
 					<div className="flex items-center gap-6">
-						<Link to="/" className="text-lg font-bold">
-							emjudge
+						<Link to="/" className="flex items-center gap-2 text-lg font-bold">
+							<img src="/ej.svg" alt="emjudge" className="size-7" />
 						</Link>
 						{user && (
 							<nav className="flex items-center gap-4 text-sm">
