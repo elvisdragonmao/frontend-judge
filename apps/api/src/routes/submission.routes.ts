@@ -1,21 +1,84 @@
 import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 import {
   IdParam,
   isStaff,
+  MessageResponse,
   MINIO_BUCKETS,
   normalizeSubmissionPath,
   PaginationQuery,
+  SubmissionDetail,
+  SubmissionListResponse,
   shouldIgnoreUploadPath,
 } from "@judge/shared";
 import { authenticate } from "../middleware/auth.js";
+import {
+  authSecurity,
+  createRouteSchema,
+  toJsonSchema,
+  withErrorResponses,
+} from "../lib/openapi.js";
 import * as submissionService from "../services/submission.service.js";
 import { getPresignedUrl } from "../utils/minio.js";
+
+const SubmissionCreatedResponse = z.object({
+  id: z.string().uuid(),
+  message: z.string(),
+});
+
+const DownloadUrlResponse = z.object({
+  url: z.string(),
+});
+
+const SubmissionFileDownloadResponse = z.object({
+  url: z.string(),
+  filename: z.string(),
+});
+
+const RejudgeResponse = z.object({
+  message: z.string(),
+  runId: z.string().uuid(),
+});
 
 export async function submissionRoutes(app: FastifyInstance) {
   // Upload submission (student only)
   app.post(
     "/api/assignments/:id/submit",
-    { preHandler: authenticate },
+    {
+      preHandler: authenticate,
+      schema: createRouteSchema({
+        tags: ["Submissions"],
+        summary: "Submit assignment files",
+        security: authSecurity,
+        params: toJsonSchema(IdParam, "SubmissionAssignmentIdParam"),
+        consumes: ["multipart/form-data"],
+        body: {
+          type: "object",
+          properties: {
+            path: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Optional repeated path fields aligned with uploaded files.",
+            },
+            file: {
+              type: "array",
+              items: { type: "string", format: "binary" },
+              description: "One or more uploaded files.",
+            },
+          },
+        },
+        response: withErrorResponses(
+          {
+            201: toJsonSchema(
+              SubmissionCreatedResponse,
+              "SubmissionCreatedResponse",
+            ),
+          },
+          [400, 401],
+        ),
+      }),
+    },
     async (request, reply) => {
       const { id: assignmentId } = IdParam.parse(request.params);
 
@@ -66,7 +129,22 @@ export async function submissionRoutes(app: FastifyInstance) {
   // List submissions for an assignment (staff: all, student: own)
   app.get(
     "/api/assignments/:id/submissions",
-    { preHandler: authenticate },
+    {
+      preHandler: authenticate,
+      schema: createRouteSchema({
+        tags: ["Submissions"],
+        summary: "List submissions for assignment",
+        security: authSecurity,
+        params: toJsonSchema(IdParam, "SubmissionListAssignmentIdParam"),
+        querystring: toJsonSchema(PaginationQuery, "SubmissionPaginationQuery"),
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(SubmissionListResponse, "SubmissionListResponse"),
+          },
+          [401],
+        ),
+      }),
+    },
     async (request) => {
       const { id: assignmentId } = IdParam.parse(request.params);
       const { page, limit } = PaginationQuery.parse(request.query);
@@ -87,7 +165,21 @@ export async function submissionRoutes(app: FastifyInstance) {
   // Get submission detail
   app.get(
     "/api/submissions/:id",
-    { preHandler: authenticate },
+    {
+      preHandler: authenticate,
+      schema: createRouteSchema({
+        tags: ["Submissions"],
+        summary: "Get submission detail",
+        security: authSecurity,
+        params: toJsonSchema(IdParam, "SubmissionIdParam"),
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(SubmissionDetail, "SubmissionDetail"),
+          },
+          [401, 403, 404],
+        ),
+      }),
+    },
     async (request, reply) => {
       const { id } = IdParam.parse(request.params);
       const detail = await submissionService.getDetail(id);
@@ -108,7 +200,24 @@ export async function submissionRoutes(app: FastifyInstance) {
   // Download original submission file (admin only)
   app.get(
     "/api/submission-files/:id/download",
-    { preHandler: authenticate },
+    {
+      preHandler: authenticate,
+      schema: createRouteSchema({
+        tags: ["Submissions"],
+        summary: "Get submission file download URL",
+        security: authSecurity,
+        params: toJsonSchema(IdParam, "SubmissionFileIdParam"),
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(
+              SubmissionFileDownloadResponse,
+              "SubmissionFileDownloadResponse",
+            ),
+          },
+          [401, 403, 404],
+        ),
+      }),
+    },
     async (request, reply) => {
       if (request.userRole !== "admin") {
         return reply.status(403).send({ error: "Forbidden", statusCode: 403 });
@@ -132,7 +241,21 @@ export async function submissionRoutes(app: FastifyInstance) {
   // Rejudge submission
   app.post(
     "/api/submissions/:id/rejudge",
-    { preHandler: authenticate },
+    {
+      preHandler: authenticate,
+      schema: createRouteSchema({
+        tags: ["Submissions"],
+        summary: "Requeue submission for judging",
+        security: authSecurity,
+        params: toJsonSchema(IdParam, "RejudgeSubmissionIdParam"),
+        response: withErrorResponses(
+          {
+            201: toJsonSchema(RejudgeResponse, "RejudgeResponse"),
+          },
+          [401, 403, 404, 409],
+        ),
+      }),
+    },
     async (request, reply) => {
       const { id } = IdParam.parse(request.params);
       const detail = await submissionService.getDetail(id);
@@ -168,7 +291,21 @@ export async function submissionRoutes(app: FastifyInstance) {
   // Get artifact URL
   app.get(
     "/api/artifacts/:id/url",
-    { preHandler: authenticate },
+    {
+      preHandler: authenticate,
+      schema: createRouteSchema({
+        tags: ["Submissions"],
+        summary: "Get artifact URL",
+        security: authSecurity,
+        params: toJsonSchema(IdParam, "ArtifactIdParam"),
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(DownloadUrlResponse, "DownloadUrlResponse"),
+          },
+          [401, 404],
+        ),
+      }),
+    },
     async (request, reply) => {
       const { id } = IdParam.parse(request.params);
       // Simple implementation: just generate a presigned URL

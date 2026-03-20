@@ -1,26 +1,70 @@
 import type { FastifyInstance } from "fastify";
-import { UpdateProfileRequest, ChangePasswordRequest } from "@judge/shared";
+import {
+  ChangePasswordRequest,
+  MessageResponse,
+  UpdateProfileRequest,
+  UserSummary,
+} from "@judge/shared";
 import { authenticate } from "../middleware/auth.js";
+import {
+  authSecurity,
+  createRouteSchema,
+  toJsonSchema,
+  withErrorResponses,
+} from "../lib/openapi.js";
 import * as userService from "../services/user.service.js";
+
+const CurrentUserResponse = UserSummary.omit({ classes: true });
 
 export async function meRoutes(app: FastifyInstance) {
   // Get current user profile
-  app.get("/api/me", { preHandler: authenticate }, async (request) => {
-    const user = await userService.findById(request.userId);
-    if (!user) throw new Error("User not found");
-    return {
-      id: user.id,
-      username: user.username,
-      displayName: user.display_name,
-      role: user.role,
-      createdAt: user.created_at.toISOString(),
-    };
-  });
+  app.get(
+    "/api/me",
+    {
+      preHandler: authenticate,
+      schema: createRouteSchema({
+        tags: ["Me"],
+        summary: "Get current user",
+        security: authSecurity,
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(CurrentUserResponse, "CurrentUserResponse"),
+          },
+          [401, 500],
+        ),
+      }),
+    },
+    async (request) => {
+      const user = await userService.findById(request.userId);
+      if (!user) throw new Error("User not found");
+      return {
+        id: user.id,
+        username: user.username,
+        displayName: user.display_name,
+        role: user.role,
+        createdAt: user.created_at.toISOString(),
+      };
+    },
+  );
 
   // Update display name
   app.patch(
     "/api/me/profile",
-    { preHandler: authenticate },
+    {
+      preHandler: authenticate,
+      schema: createRouteSchema({
+        tags: ["Me"],
+        summary: "Update current user profile",
+        security: authSecurity,
+        body: toJsonSchema(UpdateProfileRequest, "UpdateProfileRequest"),
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(MessageResponse, "MessageResponse"),
+          },
+          [400, 401],
+        ),
+      }),
+    },
     async (request) => {
       const body = UpdateProfileRequest.parse(request.body);
       await userService.updateProfile(request.userId, body.displayName);
@@ -31,7 +75,21 @@ export async function meRoutes(app: FastifyInstance) {
   // Change password
   app.post(
     "/api/me/change-password",
-    { preHandler: authenticate },
+    {
+      preHandler: authenticate,
+      schema: createRouteSchema({
+        tags: ["Me"],
+        summary: "Change current user password",
+        security: authSecurity,
+        body: toJsonSchema(ChangePasswordRequest, "ChangePasswordRequest"),
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(MessageResponse, "MessageResponse"),
+          },
+          [400, 401],
+        ),
+      }),
+    },
     async (request, reply) => {
       const body = ChangePasswordRequest.parse(request.body);
       const ok = await userService.changePassword(

@@ -3,26 +3,67 @@ import {
   CreateClassRequest,
   UpdateClassRequest,
   AddClassMembersRequest,
+  ClassCumulativeScorePoint,
+  ClassDetail,
+  ClassSummary,
   RemoveClassMemberRequest,
   IdParam,
+  MessageResponse,
 } from "@judge/shared";
 import { authenticate, requireRole } from "../middleware/auth.js";
 import { isStaff } from "@judge/shared";
+import {
+  authSecurity,
+  createRouteSchema,
+  toJsonSchema,
+  withErrorResponses,
+} from "../lib/openapi.js";
 import * as classService from "../services/class.service.js";
 
 export async function classRoutes(app: FastifyInstance) {
   // List classes (staff: all, student: only enrolled)
-  app.get("/api/classes", { preHandler: authenticate }, async (request) => {
-    if (isStaff(request.userRole)) {
-      return classService.listClasses();
-    }
-    return classService.listClassesForUser(request.userId);
-  });
+  app.get(
+    "/api/classes",
+    {
+      preHandler: authenticate,
+      schema: createRouteSchema({
+        tags: ["Classes"],
+        summary: "List classes",
+        security: authSecurity,
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(ClassSummary.array(), "ClassSummaryList"),
+          },
+          [401],
+        ),
+      }),
+    },
+    async (request) => {
+      if (isStaff(request.userRole)) {
+        return classService.listClasses();
+      }
+      return classService.listClassesForUser(request.userId);
+    },
+  );
 
   // Get class detail
   app.get(
     "/api/classes/:id",
-    { preHandler: authenticate },
+    {
+      preHandler: authenticate,
+      schema: createRouteSchema({
+        tags: ["Classes"],
+        summary: "Get class detail",
+        security: authSecurity,
+        params: toJsonSchema(IdParam, "IdParam"),
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(ClassDetail, "ClassDetail"),
+          },
+          [401, 403, 404],
+        ),
+      }),
+    },
     async (request, reply) => {
       const { id } = IdParam.parse(request.params);
 
@@ -47,7 +88,24 @@ export async function classRoutes(app: FastifyInstance) {
   // Get cumulative class score history
   app.get(
     "/api/classes/:id/score-history",
-    { preHandler: authenticate },
+    {
+      preHandler: authenticate,
+      schema: createRouteSchema({
+        tags: ["Classes"],
+        summary: "Get class score history",
+        security: authSecurity,
+        params: toJsonSchema(IdParam, "ClassIdParam"),
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(
+              ClassCumulativeScorePoint.array(),
+              "ClassCumulativeScorePointList",
+            ),
+          },
+          [401, 403],
+        ),
+      }),
+    },
     async (request, reply) => {
       const { id } = IdParam.parse(request.params);
 
@@ -67,7 +125,21 @@ export async function classRoutes(app: FastifyInstance) {
   // Create class (staff only)
   app.post(
     "/api/classes",
-    { preHandler: requireRole("admin", "teacher") },
+    {
+      preHandler: requireRole("admin", "teacher"),
+      schema: createRouteSchema({
+        tags: ["Classes"],
+        summary: "Create class",
+        security: authSecurity,
+        body: toJsonSchema(CreateClassRequest, "CreateClassRequest"),
+        response: withErrorResponses(
+          {
+            201: toJsonSchema(ClassSummary, "CreatedClassSummary"),
+          },
+          [400, 401, 403],
+        ),
+      }),
+    },
     async (request, reply) => {
       const body = CreateClassRequest.parse(request.body);
       const cls = await classService.createClass(
@@ -82,7 +154,22 @@ export async function classRoutes(app: FastifyInstance) {
   // Update class
   app.patch(
     "/api/classes/:id",
-    { preHandler: requireRole("admin", "teacher") },
+    {
+      preHandler: requireRole("admin", "teacher"),
+      schema: createRouteSchema({
+        tags: ["Classes"],
+        summary: "Update class",
+        security: authSecurity,
+        params: toJsonSchema(IdParam, "UpdateClassIdParam"),
+        body: toJsonSchema(UpdateClassRequest, "UpdateClassRequest"),
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(MessageResponse, "ClassUpdatedResponse"),
+          },
+          [400, 401, 403],
+        ),
+      }),
+    },
     async (request) => {
       const { id } = IdParam.parse(request.params);
       const body = UpdateClassRequest.parse(request.body);
@@ -94,7 +181,22 @@ export async function classRoutes(app: FastifyInstance) {
   // Add members
   app.post(
     "/api/classes/:id/members",
-    { preHandler: requireRole("admin", "teacher") },
+    {
+      preHandler: requireRole("admin", "teacher"),
+      schema: createRouteSchema({
+        tags: ["Classes"],
+        summary: "Add class members",
+        security: authSecurity,
+        params: toJsonSchema(IdParam, "AddClassMemberIdParam"),
+        body: toJsonSchema(AddClassMembersRequest, "AddClassMembersRequest"),
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(MessageResponse, "ClassMembersAddedResponse"),
+          },
+          [400, 401, 403],
+        ),
+      }),
+    },
     async (request) => {
       const { id } = IdParam.parse(request.params);
       const body = AddClassMembersRequest.parse(request.body);
@@ -106,7 +208,25 @@ export async function classRoutes(app: FastifyInstance) {
   // Remove member
   app.delete(
     "/api/classes/:id/members",
-    { preHandler: requireRole("admin", "teacher") },
+    {
+      preHandler: requireRole("admin", "teacher"),
+      schema: createRouteSchema({
+        tags: ["Classes"],
+        summary: "Remove class member",
+        security: authSecurity,
+        params: toJsonSchema(IdParam, "RemoveClassMemberIdParam"),
+        body: toJsonSchema(
+          RemoveClassMemberRequest,
+          "RemoveClassMemberRequest",
+        ),
+        response: withErrorResponses(
+          {
+            200: toJsonSchema(MessageResponse, "ClassMemberRemovedResponse"),
+          },
+          [400, 401, 403],
+        ),
+      }),
+    },
     async (request) => {
       const { id } = IdParam.parse(request.params);
       const body = RemoveClassMemberRequest.parse(request.body);

@@ -2,6 +2,8 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
 import multipart from "@fastify/multipart";
+import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
 import { config } from "./config.js";
 import { ensureBuckets } from "./utils/minio.js";
 import { authRoutes } from "./routes/auth.routes.js";
@@ -22,6 +24,41 @@ async function main() {
     limits: {
       fileSize: 50 * 1024 * 1024, // 50MB
       files: 200,
+    },
+  });
+  await app.register(swagger, {
+    openapi: {
+      info: {
+        title: "emjudge API",
+        description: "OpenAPI docs for the emjudge backend.",
+        version: "0.0.0",
+      },
+      servers: [{ url: `http://${config.HOST}:${config.PORT}` }],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "JWT",
+          },
+        },
+      },
+      tags: [
+        { name: "Auth" },
+        { name: "Me" },
+        { name: "Admin" },
+        { name: "Classes" },
+        { name: "Assignments" },
+        { name: "Submissions" },
+        { name: "System" },
+      ],
+    },
+  });
+  await app.register(swaggerUi, {
+    routePrefix: "/api/docs",
+    uiConfig: {
+      docExpansion: "list",
+      deepLinking: false,
     },
   });
 
@@ -53,7 +90,25 @@ async function main() {
   await app.register(submissionRoutes);
 
   // Health check
-  app.get("/api/health", async () => ({ status: "ok" }));
+  app.get(
+    "/api/health",
+    {
+      schema: {
+        tags: ["System"],
+        summary: "Health check",
+        response: {
+          200: {
+            type: "object",
+            required: ["status"],
+            properties: {
+              status: { type: "string", example: "ok" },
+            },
+          },
+        },
+      },
+    },
+    async () => ({ status: "ok" }),
+  );
 
   // ─── Start ───────────────────────────────────────────
   try {

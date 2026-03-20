@@ -208,6 +208,9 @@ frontend-judge/
 
 ## API 端點
 
+- Swagger UI：`/api/docs`
+- OpenAPI JSON：`/api/docs/json`
+
 ### Auth
 
 | Method | Path              | 說明           | 權限 |
