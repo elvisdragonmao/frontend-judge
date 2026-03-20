@@ -25,8 +25,9 @@ const STAGE_DEFINITIONS = [
   },
   {
     id: "install",
-    label: "安裝相依（npm）",
-    match: /npm ci|npm install|added \d+ packages|audited \d+ packages/,
+    label: "安裝相依（pnpm）",
+    match:
+      /pnpm install|Progress: resolved|Packages: \+[0-9]+|Already up to date|Lockfile is up to date/,
   },
   {
     id: "build",

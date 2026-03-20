@@ -15,6 +15,7 @@ import type {
   JudgeResult,
 } from "./base.pipeline.js";
 import { normalizePlaywrightTestContent } from "./playwright-test-content.js";
+import { prepareSharedPnpmStore } from "./pnpm-store.js";
 import { stripSharedSubmissionRoot } from "./submission-paths.js";
 
 /**
@@ -31,6 +32,7 @@ export class ReactPipeline implements JudgePipeline {
     const projectDir = path.join(workDir, "project");
     const testDir = path.join(workDir, "tests");
     const artifactsDir = path.join(workDir, "artifacts");
+    const pnpmStoreMountPath = config.JUDGE_PNPM_STORE_MOUNT_PATH;
     const reactWebServerCommand =
       "cd project && ls && " +
       "if [ -d dist ]; then " +
@@ -123,23 +125,33 @@ export default defineConfig({
     );
 
     // 4. Install, build, then test in Docker
-    await appendLog("🗃️ Installing dependencies with npm");
+    const pnpmStoreState = prepareSharedPnpmStore(
+      config.JUDGE_PNPM_STORE_DIR,
+      config.JUDGE_PNPM_STORE_CLEANUP_HOUR_TW,
+    );
+    await appendLog(
+      pnpmStoreState.cleaned
+        ? `🧹 Cleared shared pnpm store for TW ${pnpmStoreState.cleanupKey} ${String(config.JUDGE_PNPM_STORE_CLEANUP_HOUR_TW).padStart(2, "0")}:00 window`
+        : `📦 Reusing shared pnpm store (${config.JUDGE_PNPM_STORE_DIR})`,
+    );
+
+    await appendLog("🗃️ Installing dependencies with pnpm");
     const installLog = await this.runDockerCommand(
       workDir,
       totalTimeoutMs,
       submissionId,
       appendLog,
-      'bash -lc "mkdir -p /work/artifacts && cd project && set -o pipefail && if [ -f package-lock.json ]; then npm ci; else npm install; fi 2>&1 | tee /work/artifacts/react-install.log"',
+      `bash -lc ${JSON.stringify(`mkdir -p /work/artifacts && mkdir -p ${pnpmStoreMountPath} && cd project && set -o pipefail && pnpm config set store-dir ${pnpmStoreMountPath} >/dev/null && if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; else pnpm install --no-frozen-lockfile; fi 2>&1 | tee /work/artifacts/react-install.log`)}`,
     );
     await appendLog("✅ Dependencies installed");
 
-    await appendLog("🏗️ Building project with npm run build");
+    await appendLog("🏗️ Building project with pnpm run build");
     const buildLog = await this.runDockerCommand(
       workDir,
       totalTimeoutMs,
       submissionId,
       appendLog,
-      'bash -lc "mkdir -p /work/artifacts && cd project && set -o pipefail && npm run build 2>&1 | tee /work/artifacts/react-build.log"',
+      'bash -lc "mkdir -p /work/artifacts && cd project && set -o pipefail && pnpm run build 2>&1 | tee /work/artifacts/react-build.log"',
     );
     await appendLog("✅ Project build finished");
 
@@ -186,10 +198,14 @@ export default defineConfig({
         `--stop-timeout=${Math.ceil(timeoutMs / 1000)}`,
         "-v",
         `${workDir}:/work`,
+        "-v",
+        `${config.JUDGE_PNPM_STORE_DIR}:${config.JUDGE_PNPM_STORE_MOUNT_PATH}`,
         "-w",
         "/work",
         "-e",
         "NODE_PATH=/usr/lib/node_modules",
+        "-e",
+        `PNPM_STORE_DIR=${config.JUDGE_PNPM_STORE_MOUNT_PATH}`,
         config.JUDGE_IMAGE,
         "sh",
         "-c",

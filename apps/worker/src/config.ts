@@ -1,3 +1,4 @@
+import path from "node:path";
 import { z } from "zod";
 
 const EnvSchema = z.object({
@@ -17,6 +18,12 @@ const EnvSchema = z.object({
   WORKER_ID: z.string().default(`worker-${process.pid}`),
   POLL_INTERVAL_MS: z.coerce.number().default(3000),
   WORK_DIR: z.string().default("/tmp/judge-work"),
+  JUDGE_PNPM_STORE_DIR: z
+    .string()
+    .default(".cache/judge-pnpm-store")
+    .transform((value) => path.resolve(value)),
+  JUDGE_PNPM_STORE_MOUNT_PATH: z.string().default("/pnpm/store"),
+  JUDGE_PNPM_STORE_CLEANUP_HOUR_TW: z.coerce.number().min(0).max(23).default(5),
 
   /** Path to Docker binary (rootless) */
   DOCKER_BIN: z.string().default("docker"),
