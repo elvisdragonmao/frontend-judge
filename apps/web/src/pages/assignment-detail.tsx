@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Link, useParams } from "react-router";
 import {
   useAssignmentDetail,
@@ -14,16 +14,20 @@ import { PageTitle } from "@/components/page-title";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { FileUploader } from "@/components/file-uploader";
 import { SubmissionGrid, SubmissionList } from "@/components/submission-grid";
+import { useRefetchCountdown } from "@/hooks/use-refetch-countdown";
 import { ApiError } from "@/lib/api";
+import { isSubmissionActive } from "@/lib/submission-status";
 
 export function AssignmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { data: assignment, isLoading } = useAssignmentDetail(id!);
-  const { data: submissionData } = useSubmissions(id!);
+  const { data: submissionData, dataUpdatedAt: submissionsUpdatedAt } =
+    useSubmissions(id!);
   const submitMutation = useSubmit(id!);
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [showLatestOnly, setShowLatestOnly] = useState(true);
 
   const submitErrorMessage = (() => {
     if (!submitMutation.isError) {
@@ -54,6 +58,33 @@ export function AssignmentDetailPage() {
       submitMutation.mutate(formData);
     },
     [submitMutation],
+  );
+  const hasActiveSubmissions =
+    submissionData?.submissions.some((submission) =>
+      isSubmissionActive(submission.status),
+    ) ?? false;
+  const visibleSubmissions = useMemo(() => {
+    const submissions = submissionData?.submissions ?? [];
+
+    if (!showLatestOnly) {
+      return submissions;
+    }
+
+    const seenUsers = new Set<string>();
+
+    return submissions.filter((submission) => {
+      if (seenUsers.has(submission.userId)) {
+        return false;
+      }
+
+      seenUsers.add(submission.userId);
+      return true;
+    });
+  }, [submissionData?.submissions, showLatestOnly]);
+  const submissionsRefreshCountdown = useRefetchCountdown(
+    hasActiveSubmissions,
+    5000,
+    submissionsUpdatedAt,
   );
 
   if (isLoading) {
@@ -139,10 +170,32 @@ export function AssignmentDetailPage() {
       {/* Submissions */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
-            繳交紀錄 ({submissionData?.total ?? 0})
-          </h2>
-          <div className="flex gap-1">
+          <div>
+            <h2 className="text-lg font-semibold">
+              繳交紀錄 ({visibleSubmissions.length})
+            </h2>
+            {showLatestOnly &&
+              visibleSubmissions.length !== (submissionData?.total ?? 0) && (
+                <p className="text-xs text-muted-foreground">
+                  已隱藏重複提交，顯示每位學生最後一次繳交
+                </p>
+              )}
+            {hasActiveSubmissions && (
+              <p className="text-xs text-muted-foreground">
+                {submissionsRefreshCountdown} 秒後更新
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={showLatestOnly}
+                onChange={(e) => setShowLatestOnly(e.target.checked)}
+                className="h-4 w-4 rounded border-border"
+              />
+              僅看每人最新
+            </label>
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
               size="sm"
@@ -160,16 +213,15 @@ export function AssignmentDetailPage() {
           </div>
         </div>
 
-        {submissionData?.submissions.length === 0 && (
+        {visibleSubmissions.length === 0 && (
           <p className="text-muted-foreground">尚無繳交紀錄</p>
         )}
 
-        {submissionData &&
-          submissionData.submissions.length > 0 &&
+        {visibleSubmissions.length > 0 &&
           (viewMode === "grid" ? (
-            <SubmissionGrid submissions={submissionData.submissions} />
+            <SubmissionGrid submissions={visibleSubmissions} />
           ) : (
-            <SubmissionList submissions={submissionData.submissions} />
+            <SubmissionList submissions={visibleSubmissions} />
           ))}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
+import { isSubmissionActive } from "@/lib/submission-status";
 import type {
   LoginResponse,
   LoginRequest,
@@ -156,6 +157,13 @@ export function useSubmissions(assignmentId: string, page = 1) {
         `/assignments/${assignmentId}/submissions?page=${page}`,
       ),
     enabled: !!assignmentId,
+    refetchInterval: (query) =>
+      query.state.data?.submissions.some((submission) =>
+        isSubmissionActive(submission.status),
+      )
+        ? 5000
+        : false,
+    refetchIntervalInBackground: true,
   });
 }
 
@@ -164,6 +172,11 @@ export function useSubmissionDetail(id: string) {
     queryKey: queryKeys.submissionDetail(id),
     queryFn: () => api.get<SubmissionDetail>(`/submissions/${id}`),
     enabled: !!id,
+    refetchInterval: (query) =>
+      query.state.data && isSubmissionActive(query.state.data.status)
+        ? 5000
+        : false,
+    refetchIntervalInBackground: true,
   });
 }
 
@@ -188,10 +201,12 @@ export function useSubmit(assignmentId: string) {
   return useMutation({
     mutationFn: (formData: FormData) =>
       api.upload(`/assignments/${assignmentId}/submit`, formData),
-    onSuccess: () =>
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["submissions"] });
       qc.invalidateQueries({
-        queryKey: queryKeys.submissions(assignmentId),
-      }),
+        queryKey: queryKeys.assignmentDetail(assignmentId),
+      });
+    },
   });
 }
 

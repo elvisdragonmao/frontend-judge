@@ -34,6 +34,14 @@ export function ScoreChart({ data, className }: ScoreChartProps) {
     const chart = echarts.init(chartRef.current);
     instanceRef.current = chart;
 
+    const formatPointTime = (value: string) =>
+      new Date(value).toLocaleString("zh-TW", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
     const option: echarts.EChartsCoreOption = {
       title: {
         text: "班級累積分數變化",
@@ -50,7 +58,7 @@ export function ScoreChart({ data, className }: ScoreChartProps) {
           }>;
           const item = list[0];
           if (!item) return "";
-          return `${item.axisValueLabel}<br/>班級累積分數：${item.value}<br/>最新成長作業：${item.data.assignmentTitle}`;
+          return `${formatPointTime(item.axisValueLabel)}<br/>班級累積分數：${item.value}<br/>最新成長作業：${item.data.assignmentTitle}`;
         },
       },
       grid: {
@@ -62,7 +70,10 @@ export function ScoreChart({ data, className }: ScoreChartProps) {
       xAxis: {
         type: "category",
         data: data.map((d) => d.date),
-        axisLabel: { rotate: 30 },
+        axisLabel: {
+          rotate: 30,
+          formatter: (value: string) => formatPointTime(value),
+        },
       },
       yAxis: {
         type: "value",

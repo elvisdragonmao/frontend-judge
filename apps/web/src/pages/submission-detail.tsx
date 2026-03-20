@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageTitle } from "@/components/page-title";
+import { useRefetchCountdown } from "@/hooks/use-refetch-countdown";
 import { useAuth } from "@/stores/auth";
 import { api } from "@/lib/api";
+import { isSubmissionActive } from "@/lib/submission-status";
 
 function ArtifactImage({
   artifactId,
@@ -90,7 +92,11 @@ function statusLabel(status: string) {
 export function SubmissionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { data: submission, isLoading } = useSubmissionDetail(id!);
+  const {
+    data: submission,
+    isLoading,
+    dataUpdatedAt,
+  } = useSubmissionDetail(id!);
   const rejudgeMutation = useRejudgeSubmission(id!);
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(
     null,
@@ -111,6 +117,8 @@ export function SubmissionDetailPage() {
       setDownloadingFileId(null);
     }
   }, []);
+  const isInQueue = submission ? isSubmissionActive(submission.status) : false;
+  const refreshCountdown = useRefetchCountdown(isInQueue, 5000, dataUpdatedAt);
 
   if (isLoading) {
     return (
@@ -130,9 +138,6 @@ export function SubmissionDetailPage() {
     );
   }
 
-  const isInQueue = ["pending", "queued", "running"].includes(
-    submission.status,
-  );
   const canRejudge =
     !!user && (user.role !== "student" || user.id === submission.userId);
   const canDownloadFiles = user?.role === "admin";
@@ -174,6 +179,11 @@ export function SubmissionDetailPage() {
         <Badge variant={statusVariant(submission.status)} className="text-sm">
           {statusLabel(submission.status)}
         </Badge>
+        {isInQueue && (
+          <span className="text-xs text-muted-foreground">
+            {refreshCountdown} 秒後更新
+          </span>
+        )}
         {submission.score !== null && (
           <span className="text-lg font-semibold">
             {submission.score} / {submission.maxScore} 分

@@ -33,6 +33,11 @@ export default defineConfig(({ mode }) => {
           target: apiProxyTarget,
           changeOrigin: true,
         },
+        "/img": {
+          target: "http://localhost:9000",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/img/, ""),
+        },
       },
     },
     build: {

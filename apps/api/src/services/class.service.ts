@@ -191,19 +191,11 @@ export async function getClassScoreHistory(classId: string) {
     totalScore += row.score - previousBest;
     bestScores.set(key, row.score);
 
-    const date = row.created_at.toISOString().split("T")[0]!;
-    const lastPoint = points[points.length - 1];
-
-    if (lastPoint?.date === date) {
-      lastPoint.totalScore = totalScore;
-      lastPoint.assignmentTitle = row.title;
-    } else {
-      points.push({
-        date,
-        totalScore,
-        assignmentTitle: row.title,
-      });
-    }
+    points.push({
+      date: row.created_at.toISOString(),
+      totalScore,
+      assignmentTitle: row.title,
+    });
   }
 
   return points;
