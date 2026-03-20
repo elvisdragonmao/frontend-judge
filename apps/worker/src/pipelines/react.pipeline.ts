@@ -31,11 +31,15 @@ export class ReactPipeline implements JudgePipeline {
     const projectDir = path.join(workDir, "project");
     const testDir = path.join(workDir, "tests");
     const artifactsDir = path.join(workDir, "artifacts");
-    const reactWebServerCommand = [
-      "cd project",
-      "if [ -d dist ]; then OUTPUT_DIR=dist; elif [ -d build ]; then OUTPUT_DIR=build; else echo 'No dist/ or build/ directory found after build' >&2; exit 1; fi",
-      'npx serve -s "$OUTPUT_DIR" -l 3000',
-    ].join(" && ");
+    const reactWebServerCommand =
+      "cd project && ls && " +
+      "if [ -d dist ]; then " +
+      "echo 'Serving from dist' && npx serve -s dist -l 3000; " +
+      "elif [ -d build ]; then " +
+      "echo 'Serving from build' && npx serve -s build -l 3000; " +
+      "else " +
+      "echo 'No dist/ or build/ directory found after build' >&2; exit 1; " +
+      "fi";
 
     fs.mkdirSync(projectDir, { recursive: true });
     fs.mkdirSync(testDir, { recursive: true });
