@@ -19,9 +19,9 @@ import { stripSharedSubmissionRoot } from "./submission-paths.js";
 
 /**
  * React pipeline:
- * 1. Use a trusted React template (provided by the platform)
- * 2. Student only overwrites src/ and public/ (filtered by allowedPaths / blockedPaths)
- * 3. Platform runs `npm install && npm run build`
+ * 1. Download student files into the judge workspace
+ * 2. Filter files by allowedPaths / blockedPaths
+ * 3. Run dependency install and build
  * 4. Serve the build output
  * 5. Run Playwright tests
  */
@@ -47,11 +47,7 @@ export class ReactPipeline implements JudgePipeline {
     fs.chmodSync(workDir, 0o777);
     fs.chmodSync(artifactsDir, 0o777);
 
-    // 1. Copy trusted React template into projectDir
-    // The template should be pre-built into the judge Docker image at /templates/react
-    // For now, we assume it exists there.
-
-    // 2. Download student files — only allowed paths
+    // 1. Download student files — only allowed paths
     await appendLog("📥 Downloading submission files from MinIO");
     const files = await queryMany<{
       path: string;
@@ -86,7 +82,7 @@ export class ReactPipeline implements JudgePipeline {
 
     await appendLog(`📥 Downloaded ${downloadedCount} submission files`);
 
-    // 3. Write test file
+    // 2. Write test file
     await appendLog("📝 Preparing Playwright tests");
     if (spec.testContent) {
       fs.writeFileSync(
@@ -96,7 +92,7 @@ export class ReactPipeline implements JudgePipeline {
       );
     }
 
-    // 4. Write playwright config
+    // 3. Write playwright config
     const totalTimeoutMs = spec.timeoutMs + 120_000;
 
     fs.writeFileSync(
@@ -126,7 +122,7 @@ export default defineConfig({
       "utf-8",
     );
 
-    // 5. Install, build, then test in Docker
+    // 4. Install, build, then test in Docker
     await appendLog("🗃️ Installing dependencies with npm");
     const installLog = await this.runDockerCommand(
       workDir,
@@ -169,7 +165,7 @@ export default defineConfig({
       .filter(Boolean)
       .join("\n");
 
-    // 6. Parse results (same as HTML/CSS/JS)
+    // 5. Parse results (same as HTML/CSS/JS)
     return this.parseResults(workDir, log, artifactsDir, true);
   }
 

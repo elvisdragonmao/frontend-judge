@@ -173,8 +173,7 @@ frontend-judge/
 │   │       └── index.ts
 │   └── config/                     # 共用 tsconfig
 ├── docker/
-│   ├── judge-runner/Dockerfile     # Playwright + serve 映像
-│   └── react-template/            # React 題型的 trusted 模板
+│   └── judge-runner/Dockerfile     # Playwright + serve 映像
 ├── docker-compose.yml              # 開發用 PostgreSQL + MinIO
 └── pnpm-workspace.yaml
 ```
@@ -337,15 +336,16 @@ test("截圖", async ({ page }) => {
 
 ### React 題型
 
-學生只需繳交 `src/` 和 `public/` 目錄下的檔案。系統使用 trusted React template，學生不能覆蓋以下檔案：
+學生的 React 專案會依 assignment spec 的 `allowedPaths` / `blockedPaths` 過濾後放進評測工作目錄。
 
-- `package.json`
+目前預設會阻擋：
+
 - `Dockerfile`
 - `*.sh`
 - `node_modules/**`
 - `.env`
 
-系統會在容器內執行 `npm install && npm run build`，然後用 `serve` 提供 build 產出，再跑 Playwright 測試。
+系統會在容器內執行 install 與 `npm run build`，然後用 `serve` 提供 build 產出，再跑 Playwright 測試。
 
 ### 在出題頁設定
 

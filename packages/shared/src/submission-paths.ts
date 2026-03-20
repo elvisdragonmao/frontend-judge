@@ -12,7 +12,6 @@ export const DEFAULT_UPLOAD_IGNORED_PATHS = [
 export const DEFAULT_REACT_ALLOWED_PATHS = ["**/*"] as const;
 
 export const DEFAULT_BLOCKED_PATHS = [
-  "package.json",
   "Dockerfile",
   "*.sh",
   "node_modules/**",
