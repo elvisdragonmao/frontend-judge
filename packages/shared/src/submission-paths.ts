@@ -60,6 +60,12 @@ export function matchesPathPattern(filePath: string, pattern: string): boolean {
 
   if (pattern.endsWith("/**")) {
     const prefix = pattern.slice(0, -3);
+
+    if (!prefix.includes(PATH_SEPARATOR)) {
+      const segments = filePath.split(PATH_SEPARATOR);
+      return segments.includes(prefix);
+    }
+
     return filePath === prefix || filePath.startsWith(`${prefix}/`);
   }
 

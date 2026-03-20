@@ -13,7 +13,6 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [ignoredCount, setIgnoredCount] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [isPickerMenuOpen, setIsPickerMenuOpen] = useState(false);
 
   const collectAcceptedFiles = useCallback((files: File[]) => {
     const accepted = files.filter((file) => {
@@ -31,7 +30,6 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files ?? []);
       collectAcceptedFiles(files);
-      setIsPickerMenuOpen(false);
     },
     [collectAcceptedFiles],
   );
@@ -88,67 +86,48 @@ export function FileUploader({ onUpload, isLoading }: FileUploaderProps) {
         <p className="mt-1 text-xs text-muted-foreground">
           也可使用下方按鈕選擇檔案或資料夾
         </p>
-      </div>
 
-      <div className="relative flex gap-2">
-        {/* Single / multiple file upload */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          className="hidden"
-          onChange={handleFileChange}
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsPickerMenuOpen((open) => !open)}
-          disabled={isLoading}
-        >
-          選擇檔案或資料夾
-        </Button>
+        <div className="mt-4 flex justify-center gap-2">
+          {/* Single / multiple file upload */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isLoading}
+          >
+            選擇檔案
+          </Button>
 
-        {isPickerMenuOpen && !isLoading && (
-          <div className="absolute top-full z-10 mt-2 min-w-44 rounded-md border bg-background p-1 shadow-md">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start"
-              onClick={() => {
-                setIsPickerMenuOpen(false);
-                fileInputRef.current?.click();
-              }}
-            >
-              選擇檔案
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start"
-              onClick={() => {
-                setIsPickerMenuOpen(false);
-                folderInputRef.current?.click();
-              }}
-            >
-              選擇資料夾
-            </Button>
-          </div>
-        )}
-
-        {/* Folder upload */}
-        <input
-          ref={folderInputRef}
-          type="file"
-          // @ts-expect-error webkitdirectory is a non-standard attribute
-          webkitdirectory=""
-          // @ts-ignore directory is a non-standard attribute
-          directory=""
-          multiple
-          className="hidden"
-          onChange={handleFileChange}
-        />
+          {/* Folder upload */}
+          <input
+            ref={folderInputRef}
+            type="file"
+            // @ts-expect-error webkitdirectory is a non-standard attribute
+            webkitdirectory=""
+            // @ts-ignore directory is a non-standard attribute
+            directory=""
+            multiple
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => folderInputRef.current?.click()}
+            disabled={isLoading}
+          >
+            選擇資料夾
+          </Button>
+        </div>
       </div>
 
       {selectedFiles.length > 0 && (

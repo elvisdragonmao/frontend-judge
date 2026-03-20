@@ -14,6 +14,7 @@ import { PageTitle } from "@/components/page-title";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { FileUploader } from "@/components/file-uploader";
 import { SubmissionGrid, SubmissionList } from "@/components/submission-grid";
+import { ApiError } from "@/lib/api";
 
 export function AssignmentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,26 @@ export function AssignmentDetailPage() {
   const submitMutation = useSubmit(id!);
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+
+  const submitErrorMessage = (() => {
+    if (!submitMutation.isError) {
+      return null;
+    }
+
+    const error = submitMutation.error;
+    if (error instanceof ApiError) {
+      if (
+        error.statusCode === 413 ||
+        error.message.includes("reach files limit")
+      ) {
+        return "提交失敗：檔案數量超過上限，請確認已排除 node_modules、dist 等產物後再試。";
+      }
+
+      return error.message;
+    }
+
+    return "提交失敗，請重試。";
+  })();
 
   const handleUpload = useCallback(
     (files: File[]) => {
@@ -106,9 +127,9 @@ export function AssignmentDetailPage() {
             {submitMutation.isSuccess && (
               <p className="mt-3 text-sm text-green-600">作業已成功提交！</p>
             )}
-            {submitMutation.isError && (
+            {submitErrorMessage && (
               <p className="mt-3 text-sm text-destructive">
-                提交失敗，請重試。
+                {submitErrorMessage}
               </p>
             )}
           </CardContent>

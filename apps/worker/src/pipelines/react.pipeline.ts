@@ -14,6 +14,7 @@ import type {
   JudgePipeline,
   JudgeResult,
 } from "./base.pipeline.js";
+import { normalizePlaywrightTestContent } from "./playwright-test-content.js";
 
 /**
  * React pipeline:
@@ -74,7 +75,7 @@ export class ReactPipeline implements JudgePipeline {
     if (spec.testContent) {
       fs.writeFileSync(
         path.join(testDir, "judge.spec.ts"),
-        spec.testContent,
+        normalizePlaywrightTestContent(spec.testContent),
         "utf-8",
       );
     }
