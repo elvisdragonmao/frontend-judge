@@ -258,21 +258,30 @@ export async function submissionRoutes(app: FastifyInstance) {
 					{
 						200: toJsonSchema(DownloadUrlResponse, "DownloadUrlResponse")
 					},
-					[401, 404]
+					[401, 403, 404]
 				)
 			})
 		},
 		async (request, reply) => {
 			const { id } = IdParam.parse(request.params);
-			// Simple implementation: just generate a presigned URL
-			// In a real system you'd look up the artifact and check permissions
 			const { queryOne } = await import("../db/pool.js");
 			const artifact = await queryOne<{
 				minio_key: string;
 				submission_id: string;
-			}>("SELECT minio_key, submission_id FROM submission_artifacts WHERE id = $1", [id]);
+				user_id: string;
+			}>(
+				`SELECT sa.minio_key, sa.submission_id, s.user_id
+				 FROM submission_artifacts sa
+				 JOIN submissions s ON s.id = sa.submission_id
+				 WHERE sa.id = $1`,
+				[id]
+			);
 			if (!artifact) {
 				return reply.status(404).send({ error: "Artifact not found", statusCode: 404 });
+			}
+
+			if (request.userRole === "student" && artifact.user_id !== request.userId) {
+				return reply.status(403).send({ error: "Forbidden", statusCode: 403 });
 			}
 
 			const url = await getPresignedUrl(MINIO_BUCKETS.ARTIFACTS, artifact.minio_key);

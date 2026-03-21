@@ -1,10 +1,11 @@
-import { MINIO_BUCKETS } from "@judge/shared";
+import { isSubmissionPathAllowed, MINIO_BUCKETS, normalizeSubmissionPath } from "@judge/shared";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { config } from "../config.js";
 import { queryMany } from "../db.js";
 import { downloadFile } from "../minio.js";
+import { collectArtifacts } from "./artifacts.js";
 import type { JudgeContext, JudgePipeline, JudgeResult } from "./base.pipeline.js";
 import { normalizePlaywrightTestContent } from "./playwright-test-content.js";
 import { stripSharedSubmissionRoot } from "./submission-paths.js";
@@ -19,14 +20,31 @@ export class HtmlCssJsPipeline implements JudgePipeline {
 		const siteDir = path.join(workDir, "site");
 		const testDir = path.join(workDir, "tests");
 		const artifactsDir = path.join(workDir, "artifacts");
+		const jobCacheDir = path.join(workDir, ".cache");
+		const homeDir = path.join(jobCacheDir, "home");
+		const xdgCacheDir = path.join(jobCacheDir, "xdg-cache");
+		const npmCacheDir = path.join(jobCacheDir, "npm-cache");
+		const tempDir = path.join(jobCacheDir, "tmp");
+		const containerCacheRoot = "/work/.cache";
 
 		this.log(submissionId, "Creating directories...");
 		// Create directories
 		fs.mkdirSync(siteDir, { recursive: true });
 		fs.mkdirSync(testDir, { recursive: true });
 		fs.mkdirSync(artifactsDir, { recursive: true });
-		fs.chmodSync(workDir, 0o777);
-		fs.chmodSync(artifactsDir, 0o777);
+		fs.mkdirSync(homeDir, { recursive: true });
+		fs.mkdirSync(xdgCacheDir, { recursive: true });
+		fs.mkdirSync(npmCacheDir, { recursive: true });
+		fs.mkdirSync(tempDir, { recursive: true });
+		fs.chmodSync(workDir, 0o755);
+		fs.chmodSync(siteDir, 0o755);
+		fs.chmodSync(testDir, 0o755);
+		fs.chmodSync(artifactsDir, 0o755);
+		fs.chmodSync(jobCacheDir, 0o755);
+		fs.chmodSync(homeDir, 0o755);
+		fs.chmodSync(xdgCacheDir, 0o755);
+		fs.chmodSync(npmCacheDir, 0o755);
+		fs.chmodSync(tempDir, 0o755);
 
 		// 1. Download submission files
 		await appendLog("Downloading submission files from MinIO");
@@ -35,15 +53,22 @@ export class HtmlCssJsPipeline implements JudgePipeline {
 			path: string;
 			minio_key: string;
 		}>("SELECT path, minio_key FROM submission_files WHERE submission_id = $1", [submissionId]);
+		let downloadedCount = 0;
 
 		for (const file of stripSharedSubmissionRoot(files)) {
-			const dest = path.join(siteDir, file.path);
+			const normalizedPath = normalizeSubmissionPath(file.path);
+			if (!normalizedPath || !isSubmissionPathAllowed(normalizedPath, spec.allowedPaths, spec.blockedPaths)) {
+				continue;
+			}
+
+			const dest = path.join(siteDir, normalizedPath);
 			fs.mkdirSync(path.dirname(dest), { recursive: true });
 			await downloadFile(MINIO_BUCKETS.SUBMISSIONS, file.minio_key, dest);
-			this.log(submissionId, `  Downloaded: ${file.path}`);
+			downloadedCount += 1;
+			this.log(submissionId, `  Downloaded: ${normalizedPath}`);
 		}
 
-		await appendLog(`Downloaded ${files.length} submission files`);
+		await appendLog(`Downloaded ${downloadedCount} submission files`);
 
 		// 2. Write test file
 		await appendLog("Preparing Playwright tests");
@@ -104,23 +129,42 @@ export default defineConfig({
 
 	private runInDocker(workDir: string, timeoutMs: number, submissionId: string): Promise<string> {
 		return new Promise((resolve, reject) => {
+			const containerCacheRoot = "/work/.cache";
+			const containerUser = typeof process.getuid === "function" && typeof process.getgid === "function" ? `${process.getuid()}:${process.getgid()}` : null;
 			const args = [
 				"run",
 				"--rm",
-				// "--network=none", // TODO: re-enable for security after pre-installing deps in image
+				"--network=bridge",
 				"--memory=512m",
 				"--cpus=1",
+				"--pids-limit=256",
+				"--cap-drop=ALL",
+				"--security-opt=no-new-privileges",
+				"--read-only",
 				`--stop-timeout=${Math.ceil(timeoutMs / 1000)}`,
 				"-v",
 				`${workDir}:/work`,
 				"-w",
 				"/work",
 				"-e",
+				`HOME=${containerCacheRoot}/home`,
+				"-e",
+				`XDG_CACHE_HOME=${containerCacheRoot}/xdg-cache`,
+				"-e",
+				`npm_config_cache=${containerCacheRoot}/npm-cache`,
+				"-e",
+				`TMPDIR=${containerCacheRoot}/tmp`,
+				"-e",
+				`TMP=${containerCacheRoot}/tmp`,
+				"-e",
+				`TEMP=${containerCacheRoot}/tmp`,
+				"-e",
 				"NODE_PATH=/usr/lib/node_modules",
+				...(containerUser ? ["--user", containerUser] : []),
 				config.JUDGE_IMAGE,
 				"sh",
 				"-c",
-				"npx playwright test"
+				`mkdir -p ${containerCacheRoot}/home ${containerCacheRoot}/xdg-cache ${containerCacheRoot}/npm-cache ${containerCacheRoot}/tmp && npx playwright test`
 			];
 
 			console.log(`[docker:${submissionId}] Running: ${config.DOCKER_BIN} ${args.join(" ")}`);
@@ -176,23 +220,7 @@ export default defineConfig({
 	}
 
 	private parseResults(workDir: string, log: string, artifactsDir: string): JudgeResult {
-		const artifacts: JudgeResult["artifacts"] = [];
-
-		// Collect screenshots
-		if (fs.existsSync(artifactsDir)) {
-			const entries = fs.readdirSync(artifactsDir, {
-				recursive: true,
-				withFileTypes: false
-			}) as string[];
-			for (const entry of entries) {
-				const fullPath = path.join(artifactsDir, entry);
-				if (fs.statSync(fullPath).isFile()) {
-					const ext = path.extname(entry).toLowerCase();
-					const type = ext === ".png" || ext === ".jpg" ? ("screenshot" as const) : ("log" as const);
-					artifacts.push({ type, name: entry, localPath: fullPath });
-				}
-			}
-		}
+		const artifacts = collectArtifacts(artifactsDir);
 
 		// Try to parse JSON results
 		const resultsPath = path.join(artifactsDir, "results.json");

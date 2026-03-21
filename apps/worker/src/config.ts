@@ -15,13 +15,9 @@ const EnvSchema = z.object({
 
 	WORKER_ID: z.string().default(`worker-${process.pid}`),
 	POLL_INTERVAL_MS: z.coerce.number().default(3000),
-	WORK_DIR: z
+	CACHE_ROOT_DIR: z
 		.string()
-		.default(".cache/judge-work")
-		.transform(value => path.resolve(value)),
-	JUDGE_PNPM_STORE_DIR: z
-		.string()
-		.default(".cache/judge-pnpm-store")
+		.default(".cache")
 		.transform(value => path.resolve(value)),
 	JUDGE_PNPM_STORE_MOUNT_PATH: z.string().default("/pnpm/store"),
 	JUDGE_PNPM_STORE_CLEANUP_HOUR_TW: z.coerce.number().min(0).max(23).default(5),
@@ -32,4 +28,10 @@ const EnvSchema = z.object({
 	JUDGE_IMAGE: z.string().default("judge-runner:latest")
 });
 
-export const config = EnvSchema.parse(process.env);
+const env = EnvSchema.parse(process.env);
+
+export const config = {
+	...env,
+	WORK_DIR: path.join(env.CACHE_ROOT_DIR, "judge-work"),
+	JUDGE_PNPM_STORE_DIR: path.join(env.CACHE_ROOT_DIR, "judge-pnpm-store")
+};

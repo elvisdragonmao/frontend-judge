@@ -120,7 +120,7 @@ async function processJob(job: JobRow) {
 	// Prepare work directory
 	const workDir = path.join(config.WORK_DIR, job.id);
 	fs.mkdirSync(workDir, { recursive: true });
-	await appendRunLog(job.run_id, `Workdir prepared: ${workDir}`);
+	await appendRunLog(job.run_id, `Workdir prepared for job ${job.id}`);
 
 	try {
 		const ctx: JudgeContext = {

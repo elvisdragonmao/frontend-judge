@@ -6,10 +6,19 @@ import path from "node:path";
 import { config } from "../config.js";
 import { queryMany } from "../db.js";
 import { downloadFile } from "../minio.js";
+import { collectArtifacts } from "./artifacts.js";
 import type { JudgeContext, JudgePipeline, JudgeResult } from "./base.pipeline.js";
 import { normalizePlaywrightTestContent } from "./playwright-test-content.js";
 import { prepareSharedPnpmStore } from "./pnpm-store.js";
 import { stripSharedSubmissionRoot } from "./submission-paths.js";
+
+interface DockerMount {
+	source: string;
+	target: string;
+	readonly?: boolean;
+}
+
+const SHARED_PNPM_STORE_MOUNT_PATH = "/pnpm/store-seed";
 
 /**
  * React pipeline:
@@ -25,7 +34,15 @@ export class ReactPipeline implements JudgePipeline {
 		const projectDir = path.join(workDir, "project");
 		const testDir = path.join(workDir, "tests");
 		const artifactsDir = path.join(workDir, "artifacts");
-		const pnpmStoreMountPath = config.JUDGE_PNPM_STORE_MOUNT_PATH;
+		const jobCacheDir = path.join(workDir, ".cache");
+		const homeDir = path.join(jobCacheDir, "home");
+		const xdgCacheDir = path.join(jobCacheDir, "xdg-cache");
+		const npmCacheDir = path.join(jobCacheDir, "npm-cache");
+		const tempDir = path.join(jobCacheDir, "tmp");
+		const prewarmDir = path.join(workDir, ".pnpm-prewarm");
+		const privatePnpmStoreDir = path.join(workDir, ".pnpm-store");
+		const containerCacheRoot = "/work/.cache";
+		const privatePnpmStoreMountPath = config.JUDGE_PNPM_STORE_MOUNT_PATH;
 		const blockedPaths = spec.blockedPaths.filter(pattern => pattern !== "package.json");
 		const webServerPort = await this.findAvailablePort();
 		const reactWebServerCommand =
@@ -41,10 +58,23 @@ export class ReactPipeline implements JudgePipeline {
 		fs.mkdirSync(projectDir, { recursive: true });
 		fs.mkdirSync(testDir, { recursive: true });
 		fs.mkdirSync(artifactsDir, { recursive: true });
-		fs.chmodSync(workDir, 0o777);
-		fs.chmodSync(projectDir, 0o777);
-		fs.chmodSync(testDir, 0o777);
-		fs.chmodSync(artifactsDir, 0o777);
+		fs.mkdirSync(homeDir, { recursive: true });
+		fs.mkdirSync(xdgCacheDir, { recursive: true });
+		fs.mkdirSync(npmCacheDir, { recursive: true });
+		fs.mkdirSync(tempDir, { recursive: true });
+		fs.mkdirSync(prewarmDir, { recursive: true });
+		fs.mkdirSync(privatePnpmStoreDir, { recursive: true });
+		fs.chmodSync(workDir, 0o755);
+		fs.chmodSync(projectDir, 0o755);
+		fs.chmodSync(testDir, 0o755);
+		fs.chmodSync(artifactsDir, 0o755);
+		fs.chmodSync(jobCacheDir, 0o755);
+		fs.chmodSync(homeDir, 0o755);
+		fs.chmodSync(xdgCacheDir, 0o755);
+		fs.chmodSync(npmCacheDir, 0o755);
+		fs.chmodSync(tempDir, 0o755);
+		fs.chmodSync(prewarmDir, 0o755);
+		fs.chmodSync(privatePnpmStoreDir, 0o755);
 
 		// 1. Download student files — only allowed paths
 		await appendLog("📥 Downloading submission files from MinIO");
@@ -115,31 +145,49 @@ export default defineConfig({
 				? `🧹 Cleared shared pnpm store for TW ${pnpmStoreState.cleanupKey} ${String(config.JUDGE_PNPM_STORE_CLEANUP_HOUR_TW).padStart(2, "0")}:00 window`
 				: `📦 Reusing shared pnpm store (${config.JUDGE_PNPM_STORE_DIR})`
 		);
+		await this.prewarmSharedPnpmStore(projectDir, prewarmDir, totalTimeoutMs, submissionId, appendLog);
 
 		await appendLog("🗃️ Installing dependencies with pnpm");
 		const installLog = await this.runDockerCommand(
-			workDir,
+			[
+				{ source: workDir, target: "/work" },
+				{ source: privatePnpmStoreDir, target: privatePnpmStoreMountPath },
+				{ source: config.JUDGE_PNPM_STORE_DIR, target: SHARED_PNPM_STORE_MOUNT_PATH, readonly: true }
+			],
 			totalTimeoutMs,
 			submissionId,
 			appendLog,
-			`bash -lc ${JSON.stringify(`mkdir -p /work/artifacts && mkdir -p ${pnpmStoreMountPath} && cd project && set -o pipefail && pnpm config set store-dir ${pnpmStoreMountPath} >/dev/null && if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; else pnpm install --no-frozen-lockfile; fi 2>&1 | tee /work/artifacts/react-install.log`)}`,
-			true
+			`bash -lc ${JSON.stringify(`mkdir -p ${containerCacheRoot}/home ${containerCacheRoot}/xdg-cache ${containerCacheRoot}/npm-cache ${containerCacheRoot}/tmp /work/artifacts ${privatePnpmStoreMountPath} && if [ -d ${SHARED_PNPM_STORE_MOUNT_PATH} ]; then cp -a ${SHARED_PNPM_STORE_MOUNT_PATH}/. ${privatePnpmStoreMountPath}/ 2>/dev/null || true; fi && cd project && set -o pipefail && pnpm config set store-dir ${privatePnpmStoreMountPath} >/dev/null && if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; else pnpm install --no-frozen-lockfile; fi 2>&1 | tee /work/artifacts/react-install.log`)}`,
+			{ rejectOnNonZero: true, networkMode: "bridge" }
 		);
 		await appendLog("✅ Dependencies installed");
 
 		await appendLog("🏗️ Building project with pnpm run build");
 		const buildLog = await this.runDockerCommand(
-			workDir,
+			[
+				{ source: workDir, target: "/work" },
+				{ source: privatePnpmStoreDir, target: privatePnpmStoreMountPath }
+			],
 			totalTimeoutMs,
 			submissionId,
 			appendLog,
 			'bash -lc "mkdir -p /work/artifacts && cd project && set -o pipefail && pnpm run build 2>&1 | tee /work/artifacts/react-build.log"',
-			true
+			{ rejectOnNonZero: true, networkMode: "none" }
 		);
 		await appendLog("✅ Project build finished");
 
 		await appendLog("🧪 Starting preview server and Playwright tests");
-		const testLog = await this.runDockerCommand(workDir, totalTimeoutMs, submissionId, appendLog, "npx playwright test");
+		const testLog = await this.runDockerCommand(
+			[
+				{ source: workDir, target: "/work" },
+				{ source: privatePnpmStoreDir, target: privatePnpmStoreMountPath }
+			],
+			totalTimeoutMs,
+			submissionId,
+			appendLog,
+			"npx playwright test",
+			{ networkMode: "bridge" }
+		);
 
 		const log = ["[Install]", installLog.trim(), "", "[Build]", buildLog.trim(), "", "[Test]", testLog.trim()].filter(Boolean).join("\n");
 
@@ -147,25 +195,83 @@ export default defineConfig({
 		return this.parseResults(workDir, log, artifactsDir, true);
 	}
 
-	private runDockerCommand(workDir: string, timeoutMs: number, submissionId: string, appendLog: (message: string) => Promise<void>, command: string, rejectOnNonZero = false): Promise<string> {
+	private async prewarmSharedPnpmStore(projectDir: string, prewarmDir: string, timeoutMs: number, submissionId: string, appendLog: (message: string) => Promise<void>) {
+		const containerCacheRoot = "/work/.cache";
+		const packageJsonPath = path.join(projectDir, "package.json");
+		const pnpmLockPath = path.join(projectDir, "pnpm-lock.yaml");
+
+		if (!fs.existsSync(packageJsonPath)) {
+			await appendLog("⏭️ Skipped shared pnpm cache prewarm (no package.json)");
+			return;
+		}
+
+		if (!fs.existsSync(pnpmLockPath)) {
+			await appendLog("⏭️ Skipped shared pnpm cache prewarm (no pnpm-lock.yaml)");
+			return;
+		}
+
+		fs.rmSync(prewarmDir, { recursive: true, force: true });
+		fs.mkdirSync(prewarmDir, { recursive: true });
+		fs.copyFileSync(packageJsonPath, path.join(prewarmDir, "package.json"));
+		fs.copyFileSync(pnpmLockPath, path.join(prewarmDir, "pnpm-lock.yaml"));
+
+		await appendLog("🔥 Prewarming shared pnpm cache from lockfile");
+		await this.runDockerCommand(
+			[
+				{ source: prewarmDir, target: "/prewarm" },
+				{ source: config.JUDGE_PNPM_STORE_DIR, target: SHARED_PNPM_STORE_MOUNT_PATH }
+			],
+			timeoutMs,
+			submissionId,
+			appendLog,
+			`bash -lc ${JSON.stringify(`mkdir -p ${containerCacheRoot}/home ${containerCacheRoot}/xdg-cache ${containerCacheRoot}/npm-cache ${containerCacheRoot}/tmp && cd /prewarm && pnpm config set store-dir ${SHARED_PNPM_STORE_MOUNT_PATH} >/dev/null && pnpm fetch --frozen-lockfile --ignore-scripts 2>&1`)}`,
+			{ rejectOnNonZero: true, networkMode: "bridge" }
+		);
+		await appendLog("✅ Shared pnpm cache prewarmed");
+	}
+
+	private runDockerCommand(
+		mounts: DockerMount[],
+		timeoutMs: number,
+		submissionId: string,
+		appendLog: (message: string) => Promise<void>,
+		command: string,
+		options: { rejectOnNonZero?: boolean; networkMode?: string } = {}
+	): Promise<string> {
 		return new Promise((resolve, reject) => {
+			const containerCacheRoot = "/work/.cache";
+			const containerUser = typeof process.getuid === "function" && typeof process.getgid === "function" ? `${process.getuid()}:${process.getgid()}` : null;
 			const args = [
 				"run",
 				"--rm",
-				"--network=host",
+				`--network=${options.networkMode ?? "bridge"}`,
 				"--memory=1g",
 				"--cpus=2",
+				"--pids-limit=256",
+				"--cap-drop=ALL",
+				"--security-opt=no-new-privileges",
+				"--read-only",
 				`--stop-timeout=${Math.ceil(timeoutMs / 1000)}`,
-				"-v",
-				`${workDir}:/work`,
-				"-v",
-				`${config.JUDGE_PNPM_STORE_DIR}:${config.JUDGE_PNPM_STORE_MOUNT_PATH}`,
 				"-w",
 				"/work",
+				"-e",
+				`HOME=${containerCacheRoot}/home`,
+				"-e",
+				`XDG_CACHE_HOME=${containerCacheRoot}/xdg-cache`,
+				"-e",
+				`npm_config_cache=${containerCacheRoot}/npm-cache`,
+				"-e",
+				`TMPDIR=${containerCacheRoot}/tmp`,
+				"-e",
+				`TMP=${containerCacheRoot}/tmp`,
+				"-e",
+				`TEMP=${containerCacheRoot}/tmp`,
 				"-e",
 				"NODE_PATH=/usr/lib/node_modules",
 				"-e",
 				`PNPM_STORE_DIR=${config.JUDGE_PNPM_STORE_MOUNT_PATH}`,
+				...(containerUser ? ["--user", containerUser] : []),
+				...mounts.flatMap(mount => ["-v", `${mount.source}:${mount.target}${mount.readonly ? ":ro" : ""}`]),
 				config.JUDGE_IMAGE,
 				"sh",
 				"-c",
@@ -251,7 +357,7 @@ export default defineConfig({
 				}
 
 				if (code !== 0) {
-					if (rejectOnNonZero) {
+					if (options.rejectOnNonZero) {
 						reject(new Error(`[Docker execution]\n${output}`));
 						return;
 					}
@@ -291,22 +397,7 @@ export default defineConfig({
 	}
 
 	private parseResults(workDir: string, log: string, artifactsDir: string, logAlreadyStreamed = false): JudgeResult {
-		const artifacts: JudgeResult["artifacts"] = [];
-
-		if (fs.existsSync(artifactsDir)) {
-			const entries = fs.readdirSync(artifactsDir, {
-				recursive: true,
-				withFileTypes: false
-			}) as string[];
-			for (const entry of entries) {
-				const fullPath = path.join(artifactsDir, entry);
-				if (fs.statSync(fullPath).isFile()) {
-					const ext = path.extname(entry).toLowerCase();
-					const type = ext === ".png" || ext === ".jpg" ? ("screenshot" as const) : ("log" as const);
-					artifacts.push({ type, name: entry, localPath: fullPath });
-				}
-			}
-		}
+		const artifacts = collectArtifacts(artifactsDir);
 
 		const resultsPath = path.join(artifactsDir, "results.json");
 		let testResults: JudgeResult["testResults"] = [];

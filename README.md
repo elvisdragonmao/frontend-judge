@@ -38,11 +38,11 @@ frontend-judge/
 │   ├── api/          # Fastify backend
 │   ├── web/          # React + Vite frontend
 │   └── worker/       # Judge worker process
+├── docker/
+│   └── judge-runner/ # Playwright runner image
 ├── packages/
 │   ├── shared/       # Shared types, schemas, constants, templates
 │   └── config/       # Shared TypeScript config
-├── docker/
-│   └── judge-runner/ # Playwright runner image
 ├── docker-compose.yml
 └── pnpm-workspace.yaml
 ```
