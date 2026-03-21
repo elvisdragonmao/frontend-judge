@@ -18,6 +18,24 @@ export const LoginResponse = z.object({
 });
 export type LoginResponse = z.infer<typeof LoginResponse>;
 
+// ─── Registration ─────────────────────────────────────────
+export const RegisterRequest = z.object({
+	username: z.string().min(2).max(50),
+	password: z.string().min(6),
+	displayName: z.string().min(1).max(50)
+});
+export type RegisterRequest = z.infer<typeof RegisterRequest>;
+
+export const RegistrationStatusResponse = z.object({
+	registrationEnabled: z.boolean()
+});
+export type RegistrationStatusResponse = z.infer<typeof RegistrationStatusResponse>;
+
+export const UpdateRegistrationSettingsRequest = z.object({
+	registrationEnabled: z.boolean()
+});
+export type UpdateRegistrationSettingsRequest = z.infer<typeof UpdateRegistrationSettingsRequest>;
+
 // ─── Change password ─────────────────────────────────────
 export const ChangePasswordRequest = z.object({
 	currentPassword: z.string().min(1),

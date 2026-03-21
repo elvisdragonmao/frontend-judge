@@ -1,5 +1,7 @@
 /** Centralized React Query key factory */
 export const queryKeys = {
+	registrationStatus: () => ["registration-status"] as const,
+	adminRegistrationSettings: () => ["admin", "registration-settings"] as const,
 	me: () => ["me"] as const,
 	users: (page?: number) => ["users", { page }] as const,
 	classes: () => ["classes"] as const,

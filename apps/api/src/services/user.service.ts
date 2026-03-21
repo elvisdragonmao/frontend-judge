@@ -1,4 +1,4 @@
-import type { BulkImportRow, CreateUserRequest } from "@judge/shared";
+import type { BulkImportRow, CreateUserRequest, RegisterRequest } from "@judge/shared";
 import bcrypt from "bcrypt";
 import { query, queryMany, queryOne, transaction } from "../db/pool.js";
 
@@ -81,7 +81,23 @@ export async function createUser(data: CreateUserRequest) {
      VALUES ($1, $2, $3, $4) RETURNING *`,
 		[data.username, data.displayName, passwordHash, data.role ?? "student"]
 	);
-	return row ? toSummary(row) : null;
+	if (!row) {
+		throw new Error("Failed to create user");
+	}
+	return toSummary(row);
+}
+
+export async function registerStudent(data: RegisterRequest) {
+	const passwordHash = await bcrypt.hash(data.password, 12);
+	const row = await queryOne<UserRow>(
+		`INSERT INTO users (username, display_name, password_hash, role)
+     VALUES ($1, $2, $3, 'student') RETURNING *`,
+		[data.username, data.displayName, passwordHash]
+	);
+	if (!row) {
+		throw new Error("Failed to register user");
+	}
+	return toSummary(row);
 }
 
 export async function bulkImport(users: BulkImportRow[], importedBy: string) {

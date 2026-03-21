@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useBulkImport, useCreateUser, useResetPassword, useUsers } from "@/hooks/use-api";
+import { useAdminRegistrationSettings, useBulkImport, useCreateUser, useResetPassword, useUpdateRegistrationSettings, useUsers } from "@/hooks/use-api";
 import { ChevronLeft, ChevronRight, Download, KeyRound, Plus, Upload, X } from "@/lib/icons";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,9 +13,11 @@ export function AdminPage() {
 	const { t } = useTranslation();
 	const [page, setPage] = useState(1);
 	const { data: userData, isLoading } = useUsers(page);
+	const { data: registrationSettings, isLoading: isRegistrationLoading } = useAdminRegistrationSettings();
 	const createUserMutation = useCreateUser();
 	const bulkImportMutation = useBulkImport();
 	const resetPasswordMutation = useResetPassword();
+	const updateRegistrationSettingsMutation = useUpdateRegistrationSettings();
 
 	const [showCreateUser, setShowCreateUser] = useState(false);
 	const [newUsername, setNewUsername] = useState("");
@@ -80,6 +82,8 @@ export function AdminPage() {
 		}
 	};
 
+	const registrationEnabled = registrationSettings?.registrationEnabled ?? false;
+
 	return (
 		<div className="space-y-6">
 			<PageTitle title={t("pages.admin.title")} />
@@ -143,6 +147,26 @@ export function AdminPage() {
 					</CardContent>
 				</Card>
 			)}
+
+			<Card>
+				<CardHeader>
+					<CardTitle className="text-base">{t("pages.admin.registrationTitle")}</CardTitle>
+				</CardHeader>
+				<CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+					<div className="space-y-1">
+						<p className="text-sm font-medium">{registrationEnabled ? t("pages.admin.registrationOpen") : t("pages.admin.registrationClosed")}</p>
+						<p className="text-xs text-muted-foreground">{t("pages.admin.registrationDescription")}</p>
+					</div>
+					<Button
+						size="sm"
+						variant={registrationEnabled ? "outline" : "default"}
+						disabled={isRegistrationLoading || updateRegistrationSettingsMutation.isPending}
+						onClick={() => updateRegistrationSettingsMutation.mutate({ registrationEnabled: !registrationEnabled })}
+					>
+						{registrationEnabled ? t("pages.admin.closeRegistration") : t("pages.admin.openRegistration")}
+					</Button>
+				</CardContent>
+			</Card>
 
 			<Card>
 				<CardHeader>

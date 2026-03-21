@@ -10,8 +10,11 @@ import type {
 	LoginRequest,
 	LoginResponse,
 	MessageResponse,
+	RegisterRequest,
+	RegistrationStatusResponse,
 	SubmissionDetail,
 	SubmissionListResponse,
+	UpdateRegistrationSettingsRequest,
 	UserListResponse
 } from "@judge/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,6 +23,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 export function useLogin() {
 	return useMutation({
 		mutationFn: (data: LoginRequest) => api.post<LoginResponse>("/auth/login", data)
+	});
+}
+
+export function useRegistrationStatus() {
+	return useQuery({
+		queryKey: queryKeys.registrationStatus(),
+		queryFn: () => api.get<RegistrationStatusResponse>("/auth/registration-status")
+	});
+}
+
+export function useRegister() {
+	return useMutation({
+		mutationFn: (data: RegisterRequest) => api.post<LoginResponse>("/auth/register", data)
 	});
 }
 
@@ -190,6 +206,24 @@ export function useUsers(page = 1) {
 	return useQuery({
 		queryKey: queryKeys.users(page),
 		queryFn: () => api.get<UserListResponse>(`/admin/users?page=${page}`)
+	});
+}
+
+export function useAdminRegistrationSettings() {
+	return useQuery({
+		queryKey: queryKeys.adminRegistrationSettings(),
+		queryFn: () => api.get<RegistrationStatusResponse>("/admin/settings/registration")
+	});
+}
+
+export function useUpdateRegistrationSettings() {
+	const qc = useQueryClient();
+	return useMutation({
+		mutationFn: (data: UpdateRegistrationSettingsRequest) => api.patch<RegistrationStatusResponse>("/admin/settings/registration", data),
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: queryKeys.adminRegistrationSettings() });
+			qc.invalidateQueries({ queryKey: queryKeys.registrationStatus() });
+		}
 	});
 }
 

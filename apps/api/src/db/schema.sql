@@ -29,6 +29,18 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE INDEX IF NOT EXISTS idx_users_role ON users (role);
 
+-- ─── App settings ────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS app_settings (
+  id                    SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  registration_enabled  BOOLEAN NOT NULL DEFAULT false,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO app_settings (id, registration_enabled)
+VALUES (1, false)
+ON CONFLICT (id) DO NOTHING;
+
 -- ─── Classes ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS classes (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -199,6 +211,9 @@ CREATE TRIGGER trg_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE 
 
 DROP TRIGGER IF EXISTS trg_classes_updated_at ON classes;
 CREATE TRIGGER trg_classes_updated_at BEFORE UPDATE ON classes FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+DROP TRIGGER IF EXISTS trg_app_settings_updated_at ON app_settings;
+CREATE TRIGGER trg_app_settings_updated_at BEFORE UPDATE ON app_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 DROP TRIGGER IF EXISTS trg_assignments_updated_at ON assignments;
 CREATE TRIGGER trg_assignments_updated_at BEFORE UPDATE ON assignments FOR EACH ROW EXECUTE FUNCTION update_updated_at();

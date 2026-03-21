@@ -1,8 +1,19 @@
-import { BulkImportRequest, CreateUserRequest, MessageResponse, PaginationQuery, ResetPasswordRequest, UserListResponse, UserSummary } from "@judge/shared";
+import {
+	BulkImportRequest,
+	CreateUserRequest,
+	MessageResponse,
+	PaginationQuery,
+	RegistrationStatusResponse,
+	ResetPasswordRequest,
+	UpdateRegistrationSettingsRequest,
+	UserListResponse,
+	UserSummary
+} from "@judge/shared";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { authSecurity, createRouteSchema, toJsonSchema, withErrorResponses } from "../lib/openapi.js";
 import { requireRole } from "../middleware/auth.js";
+import * as settingsService from "../services/settings.service.js";
 import * as userService from "../services/user.service.js";
 
 const BulkImportResult = z.object({
@@ -19,6 +30,48 @@ const BulkImportResult = z.object({
 
 export async function adminRoutes(app: FastifyInstance) {
 	const adminOnly = requireRole("admin");
+
+	app.get(
+		"/api/admin/settings/registration",
+		{
+			preHandler: adminOnly,
+			schema: createRouteSchema({
+				tags: ["Admin"],
+				summary: "Get registration settings",
+				security: authSecurity,
+				response: withErrorResponses(
+					{
+						200: toJsonSchema(RegistrationStatusResponse, "AdminRegistrationStatusResponse")
+					},
+					[401, 403]
+				)
+			})
+		},
+		async () => settingsService.getRegistrationStatus()
+	);
+
+	app.patch(
+		"/api/admin/settings/registration",
+		{
+			preHandler: adminOnly,
+			schema: createRouteSchema({
+				tags: ["Admin"],
+				summary: "Update registration settings",
+				security: authSecurity,
+				body: toJsonSchema(UpdateRegistrationSettingsRequest, "UpdateRegistrationSettingsRequest"),
+				response: withErrorResponses(
+					{
+						200: toJsonSchema(RegistrationStatusResponse, "UpdatedRegistrationStatusResponse")
+					},
+					[401, 403]
+				)
+			})
+		},
+		async request => {
+			const body = UpdateRegistrationSettingsRequest.parse(request.body);
+			return settingsService.updateRegistrationStatus(body.registrationEnabled);
+		}
+	);
 
 	app.get(
 		"/api/admin/users",
