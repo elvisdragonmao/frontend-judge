@@ -11,7 +11,19 @@
 	"languages": {
 		"zh-TW": "Traditional Chinese",
 		"zh-CN": "Simplified Chinese",
-		"en": "English"
+		"en": "English",
+		"ja": "Japanese",
+		"fr": "French",
+		"de": "German",
+		"es": "Spanish",
+		"it": "Italian",
+		"pt-PT": "Portuguese (Portugal)",
+		"pt-BR": "Portuguese (Brazil)",
+		"ru": "Russian",
+		"ko": "Korean",
+		"uk": "Ukrainian",
+		"pl": "Polish",
+		"tr": "Turkish"
 	},
 	"roles": {
 		"student": "Student",
