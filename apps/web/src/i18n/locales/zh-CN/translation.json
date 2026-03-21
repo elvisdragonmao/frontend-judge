@@ -475,6 +475,18 @@
 			"currentPage": "第 {{page}} 页",
 			"nextPage": "下一页",
 			"invalidFormat": "格式错误"
+		},
+		"notFound": {
+			"title": "找不到页面",
+			"pathLabel": "丢失路由",
+			"heading": "这个页面从路由树里迷路了。",
+			"description": "这个地址可能已经失效、输入错误，或页面已不存在。先回到已知页面，再继续操作。",
+			"backHome": "返回首页",
+			"goClasses": "前往班级",
+			"goLogin": "前往登录",
+			"hintCheckUrl": "先检查 URL 是否拼错，或是否来自旧书签。",
+			"hintNavigate": "也可以通过上方导航回到有效页面。",
+			"hintRetry": "如果是某个链接把你带到这里，稍后刷新或再试一次。"
 		}
 	},
 	"submissionStatus": {

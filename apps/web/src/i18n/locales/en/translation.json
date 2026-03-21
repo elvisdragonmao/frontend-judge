@@ -475,6 +475,18 @@
 			"currentPage": "Page {{page}}",
 			"nextPage": "Next",
 			"invalidFormat": "Invalid format"
+		},
+		"notFound": {
+			"title": "Page not found",
+			"pathLabel": "missing-route",
+			"heading": "This page slipped out of the route tree.",
+			"description": "The address may be outdated, mistyped, or no longer available. Jump back to a known page and keep moving.",
+			"backHome": "Back home",
+			"goClasses": "Open classes",
+			"goLogin": "Go to login",
+			"hintCheckUrl": "Check the URL for typos or an old bookmark.",
+			"hintNavigate": "Use the main navigation to return to a valid section.",
+			"hintRetry": "If a link brought you here, refresh or try again later."
 		}
 	},
 	"submissionStatus": {

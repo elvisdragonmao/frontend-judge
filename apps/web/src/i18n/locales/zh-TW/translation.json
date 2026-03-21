@@ -475,6 +475,18 @@
 			"currentPage": "第 {{page}} 頁",
 			"nextPage": "下一頁",
 			"invalidFormat": "格式錯誤"
+		},
+		"notFound": {
+			"title": "找不到頁面",
+			"pathLabel": "遺失路由",
+			"heading": "這個頁面從路由樹裡迷路了。",
+			"description": "這個網址可能已失效、輸入錯誤，或該頁面已不存在。先回到已知頁面，再繼續操作。",
+			"backHome": "返回首頁",
+			"goClasses": "前往班級",
+			"goLogin": "前往登入",
+			"hintCheckUrl": "先檢查網址是否有打錯，或是否來自舊書籤。",
+			"hintNavigate": "也可以透過上方導覽列回到有效頁面。",
+			"hintRetry": "如果是從某個連結進來的，稍後重新整理或再試一次。"
 		}
 	},
 	"submissionStatus": {

@@ -6,6 +6,7 @@ import { Route, Routes } from "react-router";
 
 const HomePage = lazy(() => import("@/pages/home").then(module => ({ default: module.HomePage })));
 const LoginPage = lazy(() => import("@/pages/login").then(module => ({ default: module.LoginPage })));
+const RegisterPage = lazy(() => import("@/pages/register").then(module => ({ default: module.RegisterPage })));
 const ProfilePage = lazy(() => import("@/pages/profile").then(module => ({ default: module.ProfilePage })));
 const ClassesPage = lazy(() => import("@/pages/classes").then(module => ({ default: module.ClassesPage })));
 const ClassDetailPage = lazy(() =>
@@ -34,6 +35,7 @@ const SubmissionDetailPage = lazy(() =>
 	}))
 );
 const AdminPage = lazy(() => import("@/pages/admin").then(module => ({ default: module.AdminPage })));
+const NotFoundPage = lazy(() => import("@/pages/not-found").then(module => ({ default: module.NotFoundPage })));
 
 function PageFallback() {
 	const { t } = useTranslation();
@@ -53,6 +55,7 @@ export function App() {
 					{/* Public */}
 					<Route index element={<HomePage />} />
 					<Route path="login" element={<LoginPage />} />
+					<Route path="register" element={<RegisterPage />} />
 
 					{/* Authenticated */}
 					<Route element={<AuthGuard />}>
@@ -73,6 +76,8 @@ export function App() {
 					<Route element={<AuthGuard allowedRoles={["admin"]} />}>
 						<Route path="admin" element={<AdminPage />} />
 					</Route>
+
+					<Route path="*" element={<NotFoundPage />} />
 				</Route>
 			</Routes>
 		</Suspense>
