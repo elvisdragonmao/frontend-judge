@@ -1,0 +1,572 @@
+{
+	"common": {
+		"appName": "emjudge",
+		"loading": "載入中...",
+		"cancel": "取消",
+		"save": "儲存",
+		"edit": "編輯",
+		"preview": "預覽",
+		"confirm": "確認"
+	},
+	"languages": {
+		"zh-TW": "繁體中文",
+		"zh-CN": "簡體中文",
+		"en": "English"
+	},
+	"roles": {
+		"student": "學生",
+		"teacher": "教師",
+		"admin": "管理員"
+	},
+	"assignmentTypes": {
+		"html-css-js": "HTML / CSS / JS",
+		"react": "React"
+	},
+	"layout": {
+		"nav": {
+			"classes": "班級",
+			"admin": "管理",
+			"logout": "登出"
+		},
+		"theme": {
+			"toggle": "切換主題"
+		},
+		"language": {
+			"label": "語言"
+		}
+	},
+	"components": {
+		"submissionGrid": {
+			"screenshotAlt": "{{name}} 的截圖",
+			"noScreenshot": "無截圖",
+			"score": "分數: {{score}} / {{maxScore}}",
+			"userFiles": "@{{username}} / {{count}} 個檔案"
+		},
+		"scoreChart": {
+			"title": "班級累積分數變化",
+			"tooltip": "{{time}}<br/>{{userName}}：{{value}} 分<br/>最新成長作業：{{assignmentTitle}}"
+		},
+		"fileUploader": {
+			"drag": "拖曳檔案到這裡上傳",
+			"helper": "也可使用下方按鈕選擇檔案或資料夾",
+			"chooseFiles": "選擇檔案",
+			"chooseFolder": "選擇資料夾",
+			"selectedFiles": "已選擇 {{count}} 個檔案",
+			"uploading": "上傳中...",
+			"submit": "提交作業",
+			"ignoredFiles": "已自動忽略 {{count}} 個檔案（例如 `node_modules`、`dist`、`build`）。"
+		}
+	},
+	"templatePicker": {
+		"paramCount": "{{count}} 個參數",
+		"noConfig": "無需設定",
+		"paramSettings": "{{name}} — 參數設定",
+		"noExtraSettings": "此模板不需要額外設定。",
+		"previewCode": "預覽程式碼",
+		"applyReplace": "覆蓋套用",
+		"applyAppend": "追加套用",
+		"generatedCode": "產生的測試程式碼：",
+		"categories": {
+			"html-elements": "HTML 元素",
+			"styling": "CSS 樣式",
+			"functionality": "功能互動",
+			"page": "頁面品質",
+			"screenshot": "截圖",
+			"react": "React"
+		},
+		"templates": {
+			"html-required-elements": {
+				"name": "必要 HTML 元素檢查",
+				"description": "檢查頁面是否包含指定的 HTML 元素，例如 nav、header、footer、main、h1。",
+				"params": {
+					"selectors": {
+						"label": "要檢查的 CSS selectors（每行一個）",
+						"placeholder": "nav\nheader\nfooter\nmain\nh1"
+					}
+				}
+			},
+			"html-element-count": {
+				"name": "HTML 元素數量檢查",
+				"description": "檢查特定元素的數量是否符合預期，例如 li、img、a。",
+				"params": {
+					"rules": {
+						"label": "規則（每行一條：selector,最少數量）",
+						"placeholder": "li,3\nimg,2\na,5"
+					}
+				}
+			},
+			"html-form-elements": {
+				"name": "表單元素檢查",
+				"description": "檢查頁面是否具有完整的表單結構。",
+				"params": {
+					"formSelector": {
+						"label": "表單 selector",
+						"placeholder": "form"
+					},
+					"inputNames": {
+						"label": "必要 input name 屬性（每行一個）",
+						"placeholder": "name\nemail\npassword"
+					},
+					"requireSubmitButton": {
+						"label": "需要 submit 按鈕 (1=是, 0=否)",
+						"placeholder": "1"
+					}
+				}
+			},
+			"styling-property-check": {
+				"name": "CSS 樣式屬性檢查",
+				"description": "檢查元素是否有指定的 CSS 屬性值。",
+				"params": {
+					"rules": {
+						"label": "規則（每行一條：selector | 屬性 | 預期值）",
+						"placeholder": "nav | display | flex\nh1 | font-size | 24px\nbody | margin | 0px"
+					}
+				}
+			},
+			"styling-responsive": {
+				"name": "RWD 響應式檢查",
+				"description": "在不同視窗寬度下檢查元素可見性或樣式。",
+				"params": {
+					"rules": {
+						"label": "規則（每行一條：寬度 | selector | visible/hidden）",
+						"placeholder": "375 | .desktop-nav | hidden\n375 | .mobile-menu | visible\n1024 | .desktop-nav | visible"
+					}
+				}
+			},
+			"styling-no-default": {
+				"name": "禁止瀏覽器預設樣式",
+				"description": "檢查頁面是否移除預設樣式並套用自訂字體或背景。",
+				"params": {
+					"bodyNoMargin": {
+						"label": "檢查 body 無預設 margin (1=是)",
+						"placeholder": "1"
+					},
+					"customFont": {
+						"label": "檢查是否使用自訂字體 (1=是)",
+						"placeholder": "1"
+					},
+					"hasBackground": {
+						"label": "檢查 body 有自訂背景色 (1=是)",
+						"placeholder": "0"
+					}
+				}
+			},
+			"func-click-event": {
+				"name": "按鈕點擊事件",
+				"description": "點擊按鈕後檢查頁面是否出現預期變化。",
+				"params": {
+					"buttonSelector": {
+						"label": "按鈕 selector",
+						"placeholder": "#myButton"
+					},
+					"resultSelector": {
+						"label": "結果顯示的 selector",
+						"placeholder": "#result"
+					},
+					"expectedText": {
+						"label": "預期出現的文字",
+						"placeholder": "Hello!"
+					}
+				}
+			},
+			"func-form-submit": {
+				"name": "表單送出驗證",
+				"description": "填寫表單欄位並送出，檢查送出後的結果或驗證訊息。",
+				"params": {
+					"fields": {
+						"label": "欄位填寫（每行：selector | 值）",
+						"placeholder": "#name | 小明\n#email | test@example.com"
+					},
+					"submitSelector": {
+						"label": "送出按鈕 selector",
+						"placeholder": "button[type=\"submit\"]"
+					},
+					"successSelector": {
+						"label": "成功訊息 selector",
+						"placeholder": ".success-message"
+					},
+					"successText": {
+						"label": "成功訊息文字（留空表示只檢查可見性）",
+						"placeholder": "送出成功"
+					}
+				}
+			},
+			"func-localstorage": {
+				"name": "LocalStorage 資料保存",
+				"description": "檢查互動後是否有正確使用 localStorage 保存資料。",
+				"params": {
+					"action": {
+						"label": "觸發動作（click selector）",
+						"placeholder": "#saveBtn"
+					},
+					"storageKey": {
+						"label": "localStorage key",
+						"placeholder": "userData"
+					}
+				}
+			},
+			"page-title": {
+				"name": "頁面標題檢查",
+				"description": "檢查 <title> 是否包含指定文字。",
+				"params": {
+					"title": {
+						"label": "預期標題（支援正則）",
+						"placeholder": "My Website"
+					}
+				}
+			},
+			"page-meta": {
+				"name": "頁面 meta 標籤檢查",
+				"description": "檢查 meta viewport、charset、description 是否正確設定。",
+				"params": {
+					"requireViewport": {
+						"label": "需要 viewport meta (1=是)",
+						"placeholder": "1"
+					},
+					"requireCharset": {
+						"label": "需要 charset meta (1=是)",
+						"placeholder": "1"
+					},
+					"requireDescription": {
+						"label": "需要 description meta (1=是)",
+						"placeholder": "1"
+					}
+				}
+			},
+			"page-multi-page": {
+				"name": "多頁面導航檢查",
+				"description": "檢查網站是否有多個頁面，連結是否能正常導航。",
+				"params": {
+					"links": {
+						"label": "要檢查的頁面路徑（每行一條：路徑 | 預期標題或元素 selector）",
+						"placeholder": "/ | h1\n/about | h1\n/contact | form"
+					}
+				}
+			},
+			"page-no-console-errors": {
+				"name": "無 Console 錯誤",
+				"description": "確認頁面載入後沒有 JavaScript console error。"
+			},
+			"page-accessibility": {
+				"name": "基礎無障礙檢查",
+				"description": "檢查圖片 alt、語意化標籤與 heading 順序等基礎無障礙項目。"
+			},
+			"screenshot-capture": {
+				"name": "截圖擷取",
+				"description": "載入頁面後擷取全頁截圖。",
+				"params": {
+					"pages": {
+						"label": "要截圖的路徑（每行一條）",
+						"placeholder": "/\n/about"
+					}
+				}
+			},
+			"react-component-render": {
+				"name": "React 元件渲染檢查",
+				"description": "檢查 React 元件是否正確渲染，props 資料是否顯示。",
+				"params": {
+					"selectors": {
+						"label": "要檢查的元素 selector（每行一個：selector | 預期文字）",
+						"placeholder": "[data-testid=\"app-title\"] | My App\n[data-testid=\"user-list\"] |"
+					}
+				}
+			},
+			"react-state-interaction": {
+				"name": "React 狀態互動檢查",
+				"description": "檢查 React 元件的狀態管理，例如 counter、toggle、list。",
+				"params": {
+					"scenario": {
+						"label": "情境 (counter / toggle / list)",
+						"placeholder": "counter"
+					}
+				}
+			}
+		}
+	},
+	"pages": {
+		"home": {
+			"title": "首頁",
+			"heroTag": "Playwright 驅動的自動評測",
+			"heroDescription": "前端作業繳交與自動評測平台。",
+			"enterClasses": "進入班級",
+			"login": "登入",
+			"browseClasses": "查看班級",
+			"featureUploadTitle": "上傳即測",
+			"featureUploadDesc": "拖放或選擇作業檔案，系統即時開始排隊與執行測試。",
+			"featureScreenshotTitle": "截圖回饋",
+			"featureScreenshotDesc": "Playwright 自動產出多尺寸截圖，快速對照設計成果。",
+			"featureScoreTitle": "清楚評分",
+			"featureScoreDesc": "測試報告與錯誤訊息一目了然，協助學生快速修正。",
+			"ctaTitle": "一站式作業管理",
+			"ctaDescription": "從班級建立、測試模板到成績回饋，全流程集中管理。",
+			"ctaPrimary": "開始使用",
+			"ctaSecondary": "教師登入"
+		},
+		"login": {
+			"title": "登入",
+			"username": "帳號",
+			"usernamePlaceholder": "請輸入帳號",
+			"password": "密碼",
+			"passwordPlaceholder": "請輸入密碼",
+			"invalidCredentials": "帳號或密碼錯誤",
+			"serverError": "登入失敗，請稍後再試。",
+			"submitting": "登入中...",
+			"submit": "登入",
+			"hintClosed": "目前未開放註冊，請聯繫管理員取得帳號。",
+			"hintOpen": "目前開放學生自行註冊，也可以直接登入既有帳號。",
+			"goRegister": "註冊學生帳號"
+		},
+		"register": {
+			"title": "註冊",
+			"username": "帳號",
+			"usernamePlaceholder": "請輸入帳號",
+			"displayName": "暱稱",
+			"displayNamePlaceholder": "請輸入暱稱",
+			"password": "密碼",
+			"passwordPlaceholder": "至少 6 個字",
+			"confirmPassword": "確認密碼",
+			"confirmPasswordPlaceholder": "請再次輸入密碼",
+			"hint": "註冊後會自動建立為學生帳號。",
+			"submit": "建立學生帳號",
+			"submitting": "註冊中...",
+			"backToLogin": "返回登入",
+			"passwordMismatch": "兩次輸入的密碼不一致",
+			"usernameTaken": "帳號已存在",
+			"closedMessage": "目前未開放註冊，請聯繫管理員。",
+			"failed": "註冊失敗，請稍後再試。"
+		},
+		"profile": {
+			"title": "個人設定",
+			"accountInfo": "帳號資訊",
+			"username": "帳號",
+			"role": "角色",
+			"displayName": "暱稱",
+			"updateDisplayName": "更新暱稱",
+			"displayNameUpdated": "暱稱已更新",
+			"displayNameUpdateFailed": "更新失敗",
+			"requestFailed": "操作失敗，請稍後再試",
+			"changePassword": "修改密碼",
+			"currentPassword": "目前密碼",
+			"newPassword": "新密碼",
+			"updatePassword": "更新密碼",
+			"passwordUpdated": "密碼已更新",
+			"passwordUpdateFailed": "密碼更新失敗，請檢查目前密碼是否正確",
+			"roles": {
+				"student": "學生",
+				"teacher": "教師",
+				"admin": "管理員"
+			}
+		},
+		"classes": {
+			"title": "班級",
+			"createClass": "建立班級",
+			"cancelCreate": "取消",
+			"joinByCodeTitle": "使用班級代碼加入",
+			"joinByCodeDescription": "輸入教師提供的班級代碼即可加入班級。",
+			"joinCodePlaceholder": "輸入班級代碼",
+			"joinByCode": "加入班級",
+			"joinCodeSuccess": "已成功加入班級",
+			"joinCodeInvalid": "班級代碼無效",
+			"joinCodeDisabled": "此班級已停用代碼加入",
+			"joinCodeAlreadyJoined": "你已經加入這個班級",
+			"joinCodeFailed": "加入班級失敗，請稍後再試",
+			"createSuccess": "班級已建立",
+			"createFailed": "建立班級失敗，請稍後再試",
+			"namePlaceholder": "班級名稱",
+			"descriptionPlaceholder": "描述（選填）",
+			"create": "建立",
+			"noDescription": "無描述",
+			"memberCount": "{{count}} 位成員",
+			"assignmentCount": "{{count}} 項作業",
+			"emptyStudent": "你尚未加入任何班級",
+			"emptyStaff": "尚未建立任何班級"
+		},
+		"assignmentForm": {
+			"basicInfo": "基本資訊",
+			"titleLabel": "標題",
+			"titlePlaceholder": "作業標題",
+			"typeLabel": "題型",
+			"dueDateOptional": "截止時間（選填）",
+			"limitByDueDate": "限制截止時間",
+			"allowMultiple": "允許多次提交",
+			"descriptionMarkdown": "題目描述 (Markdown)",
+			"descriptionPlaceholder": "用 Markdown 撰寫題目描述...",
+			"testSpec": "測試規格",
+			"showTemplates": "使用測試模板",
+			"hideTemplates": "收起模板",
+			"playwrightScript": "Playwright 測試腳本",
+			"scriptHelp": "可從上方模板產生，或自行撰寫。支援「覆蓋套用」（取代目前內容）與「追加套用」（合併到現有腳本後面）。",
+			"scriptPlaceholder": "import { test, expect } from '@playwright/test';\n\ntest('頁面標題正確', async ({ page }) => {\n  await page.goto('/');\n  await expect(page).toHaveTitle(/My Page/);\n});"
+		},
+		"assignmentCreate": {
+			"title": "建立作業",
+			"creating": "建立中...",
+			"submit": "建立作業",
+			"createFailed": "建立作業失敗，請稍後再試"
+		},
+		"assignmentEdit": {
+			"loadingTitle": "作業載入中",
+			"notFoundTitle": "作業不存在",
+			"pageTitle": "編輯作業 - {{title}}",
+			"title": "編輯作業",
+			"submissionRecordActionTitle": "修改後的繳交紀錄處理",
+			"keepRecords": "保留目前成績與紀錄",
+			"deleteRecords": "刪除目前所有繳交與成績紀錄",
+			"deleteHelp": "選擇刪除時，會清空此作業目前的 submissions/runs/artifacts。",
+			"updating": "更新中...",
+			"submit": "儲存變更",
+			"updateFailed": "更新作業失敗，請稍後再試"
+		},
+		"assignmentDetail": {
+			"loadingTitle": "作業載入中",
+			"notFoundTitle": "作業不存在",
+			"uploadFailedTooManyFiles": "提交失敗：檔案數量超過上限，請確認已排除 node_modules、dist 等產物後再試。",
+			"uploadFailedDefault": "提交失敗，請重試。",
+			"expired": "已截止",
+			"editAssignment": "編輯題目",
+			"dueAt": "截止: {{date}}",
+			"description": "題目描述",
+			"submitAssignment": "繳交作業",
+			"submitSuccess": "作業已成功提交！",
+			"submissionsTitle": "繳交紀錄 ({{count}})",
+			"hiddenDuplicates": "已隱藏重複提交，顯示每位學生最後一次繳交",
+			"refreshIn": "{{seconds}} 秒後更新",
+			"latestOnly": "僅看每人最新",
+			"list": "列表",
+			"grid": "網格",
+			"noSubmissions": "尚無繳交紀錄"
+		},
+		"submissionDetail": {
+			"imageLoadFailed": "無法載入圖片",
+			"downloadFailed": "下載失敗，請稍後再試",
+			"loadingTitle": "提交載入中",
+			"notFoundTitle": "提交不存在",
+			"pageTitle": "提交詳情 - {{name}}",
+			"backToAssignment": "返回題目",
+			"title": "提交詳情",
+			"meta": "{{name}} (@{{username}}) / {{date}}",
+			"rejudging": "重新排測中...",
+			"rejudge": "重新測試",
+			"inQueue": "目前已在評測隊列中",
+			"rejudgeSuccess": "已重新排入評測",
+			"rejudgeFailed": "重新測試失敗，請稍後再試",
+			"refreshIn": "{{seconds}} 秒後更新",
+			"scoreValue": "{{score}} / {{maxScore}} 分",
+			"scoreLabel": "分數: {{score}} / {{maxScore}}",
+			"filesCount": "{{count}} 個檔案",
+			"uploadedFiles": "上傳檔案",
+			"downloading": "下載中...",
+			"download": "下載",
+			"judgeResult": "評測結果",
+			"startedAt": "開始: {{date}}",
+			"finishedAt": "結束: {{date}}",
+			"stages": "執行階段",
+			"tests": "測試結果",
+			"pass": "PASS",
+			"fail": "FAIL",
+			"points": "{{count}} 分",
+			"timeoutHint": "此次評測在容器內逾時，通常是 npm install/build 太久或程式卡住。",
+			"artifacts": "截圖與附件"
+		},
+		"classDetail": {
+			"loadingTitle": "班級載入中",
+			"notFoundTitle": "班級不存在",
+			"joinCodeTitle": "班級代碼",
+			"joinCodeDescription": "學生可使用此代碼自行加入班級。你也可以重新發行新代碼。",
+			"joinCodeEnabled": "目前開放透過代碼加入",
+			"joinCodeDisabled": "目前已停用透過代碼加入",
+			"enableJoinCode": "啟用代碼加入",
+			"disableJoinCode": "停用代碼加入",
+			"joinCodeLabel": "目前班級代碼",
+			"copyJoinCode": "複製代碼",
+			"reissueJoinCode": "重新發行",
+			"joinCodeCopied": "班級代碼已複製",
+			"reissueJoinCodeSuccess": "已重新發行班級代碼",
+			"joinCodeActionFailed": "班級代碼設定失敗，請稍後再試",
+			"memberActionFailed": "班級成員操作失敗，請稍後再試",
+			"newAssignment": "出題",
+			"assignmentsTitle": "作業列表",
+			"noAssignments": "尚未建立作業",
+			"dueDate": "截止: {{date}}",
+			"submissionsCount": "{{count}} 份繳交",
+			"membersTitle": "成員 ({{count}})",
+			"collapse": "收起",
+			"addMembers": "新增成員",
+			"searchPlaceholder": "搜尋帳號或暱稱...",
+			"noMatchingUsers": "找不到符合的使用者",
+			"noAvailableUsers": "沒有可新增的使用者",
+			"join": "加入",
+			"usernameHeader": "帳號",
+			"displayNameHeader": "暱稱",
+			"roleHeader": "角色",
+			"actionsHeader": "操作",
+			"remove": "移除",
+			"noMembers": "尚無成員"
+		},
+		"admin": {
+			"title": "管理後台",
+			"registrationTitle": "註冊設定",
+			"registrationDescription": "控制學生是否可從登入頁自行建立帳號。預設為關閉。",
+			"registrationOpen": "目前已開放學生註冊",
+			"registrationClosed": "目前未開放學生註冊",
+			"openRegistration": "開放註冊",
+			"closeRegistration": "關閉註冊",
+			"createUser": "建立使用者",
+			"bulkImport": "批次匯入",
+			"createUserTitle": "建立使用者",
+			"usernamePlaceholder": "帳號",
+			"passwordPlaceholder": "密碼",
+			"displayNamePlaceholder": "暱稱",
+			"create": "建立",
+			"bulkImportTitle": "批次匯入",
+			"bulkImportHelp": "每行一筆，格式: 帳號,密碼,暱稱,角色(student/teacher/admin)",
+			"bulkImportPlaceholder": "student01,pass123,小明,student",
+			"import": "匯入",
+			"importDone": "匯入完成",
+			"importPartial": "部分匯入成功，失敗筆數",
+			"importFailed": "批次匯入失敗，請稍後再試",
+			"userListTitle": "使用者列表 ({{count}})",
+			"noClassJoined": "未加入班級",
+			"newPasswordPlaceholder": "新密碼",
+			"resetPassword": "重置密碼",
+			"resetPasswordSuccess": "密碼已重置",
+			"resetPasswordFailed": "重置密碼失敗，請稍後再試",
+			"createUserSuccess": "使用者已建立",
+			"createUserFailed": "建立使用者失敗，請稍後再試",
+			"registrationUpdateFailed": "更新註冊設定失敗，請稍後再試",
+			"previousPage": "上一頁",
+			"currentPage": "第 {{page}} 頁",
+			"nextPage": "下一頁",
+			"invalidFormat": "格式錯誤"
+		},
+		"notFound": {
+			"title": "找不到頁面",
+			"pathLabel": "遺失路由",
+			"heading": "這個頁面從路由樹裡迷路了。",
+			"description": "這個網址可能已失效、輸入錯誤，或該頁面已不存在。先回到已知頁面，再繼續操作。",
+			"backHome": "返回首頁",
+			"goClasses": "前往班級",
+			"goLogin": "前往登入",
+			"hintCheckUrl": "先檢查網址是否有打錯，或是否來自舊書籤。",
+			"hintNavigate": "也可以透過上方導覽列回到有效頁面。",
+			"hintRetry": "如果是從某個連結進來的，稍後重新整理或再試一次。"
+		}
+	},
+	"submissionStatus": {
+		"pending": "等待中",
+		"queued": "排隊中",
+		"running": "評測中",
+		"completed": "完成",
+		"failed": "失敗",
+		"error": "錯誤"
+	},
+	"judgeStages": {
+		"download": "下載檔案（MinIO）",
+		"prepare": "準備評測環境",
+		"install": "安裝相依（pnpm）",
+		"build": "建置專案（build）",
+		"test": "執行測試（Playwright）",
+		"upload": "上傳附件（MinIO）",
+		"persist": "整理結果"
+	}
+}
