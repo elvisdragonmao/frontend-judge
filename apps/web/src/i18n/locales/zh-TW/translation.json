@@ -387,6 +387,7 @@
 			"titlePlaceholder": "作業標題",
 			"typeLabel": "題型",
 			"dueDateOptional": "截止時間（選填）",
+			"limitByDueDate": "限制截止時間",
 			"allowMultiple": "允許多次提交",
 			"descriptionMarkdown": "題目描述 (Markdown)",
 			"descriptionPlaceholder": "用 Markdown 撰寫題目描述...",

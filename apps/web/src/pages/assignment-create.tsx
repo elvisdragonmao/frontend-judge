@@ -21,6 +21,7 @@ export function AssignmentCreatePage() {
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
 	const [type, setType] = useState<"html-css-js" | "react">("html-css-js");
+	const [hasDueDateLimit, setHasDueDateLimit] = useState(false);
 	const [dueDate, setDueDate] = useState("");
 	const [allowMultiple, setAllowMultiple] = useState(true);
 	const [testContent, setTestContent] = useState("");
@@ -55,7 +56,7 @@ export function AssignmentCreatePage() {
 				title,
 				description,
 				type,
-				dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+				dueDate: hasDueDateLimit && dueDate ? new Date(dueDate).toISOString() : undefined,
 				allowMultipleSubmissions: allowMultiple,
 				spec: {
 					startCommand: type === "react" ? DEFAULT_REACT_ASSIGNMENT_SPEC.startCommand : "static",
@@ -102,9 +103,23 @@ export function AssignmentCreatePage() {
 							</div>
 						</div>
 
-						<div className="space-y-2">
+						<div className="space-y-3">
 							<label className="text-sm font-medium">{t("pages.assignmentForm.dueDateOptional")}</label>
-							<Input type="datetime-local" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+							<label className="flex items-center gap-2 text-sm">
+								<input
+									type="checkbox"
+									checked={hasDueDateLimit}
+									onChange={e => {
+										setHasDueDateLimit(e.target.checked);
+										if (!e.target.checked) {
+											setDueDate("");
+										}
+									}}
+									className="h-4 w-4 rounded border-border"
+								/>
+								{t("pages.assignmentForm.limitByDueDate")}
+							</label>
+							{hasDueDateLimit && <Input type="datetime-local" value={dueDate} onChange={e => setDueDate(e.target.value)} />}
 						</div>
 
 						<div className="flex items-center gap-2">

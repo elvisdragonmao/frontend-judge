@@ -41,6 +41,7 @@ export const UpdateAssignmentRequest = CreateAssignmentRequest.partial()
 		classId: true
 	})
 	.extend({
+		dueDate: z.string().datetime().nullable().optional(),
 		submissionRecordAction: SubmissionRecordAction.optional()
 	});
 export type UpdateAssignmentRequest = z.infer<typeof UpdateAssignmentRequest>;

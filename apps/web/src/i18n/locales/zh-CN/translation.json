@@ -387,6 +387,7 @@
 			"titlePlaceholder": "作业标题",
 			"typeLabel": "题型",
 			"dueDateOptional": "截止时间（选填）",
+			"limitByDueDate": "限制截止时间",
 			"allowMultiple": "允许多次提交",
 			"descriptionMarkdown": "题目描述 (Markdown)",
 			"descriptionPlaceholder": "用 Markdown 编写题目描述...",

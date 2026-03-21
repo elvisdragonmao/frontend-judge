@@ -22,6 +22,7 @@ export function AssignmentEditPage() {
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
 	const [type, setType] = useState<"html-css-js" | "react">("html-css-js");
+	const [hasDueDateLimit, setHasDueDateLimit] = useState(false);
 	const [dueDate, setDueDate] = useState("");
 	const [allowMultiple, setAllowMultiple] = useState(true);
 	const [testContent, setTestContent] = useState("");
@@ -35,6 +36,7 @@ export function AssignmentEditPage() {
 		setTitle(assignment.title);
 		setDescription(assignment.description);
 		setType(assignment.type);
+		setHasDueDateLimit(Boolean(assignment.dueDate));
 		setDueDate(assignment.dueDate ? new Date(assignment.dueDate).toISOString().slice(0, 16) : "");
 		setAllowMultiple(assignment.allowMultipleSubmissions);
 		setTestContent(assignment.spec?.testContent ?? "");
@@ -63,7 +65,7 @@ export function AssignmentEditPage() {
 				title,
 				description,
 				type,
-				dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+				dueDate: hasDueDateLimit && dueDate ? new Date(dueDate).toISOString() : null,
 				allowMultipleSubmissions: allowMultiple,
 				submissionRecordAction,
 				spec: {
@@ -129,9 +131,23 @@ export function AssignmentEditPage() {
 							</div>
 						</div>
 
-						<div className="space-y-2">
+						<div className="space-y-3">
 							<label className="text-sm font-medium">{t("pages.assignmentForm.dueDateOptional")}</label>
-							<Input type="datetime-local" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+							<label className="flex items-center gap-2 text-sm">
+								<input
+									type="checkbox"
+									checked={hasDueDateLimit}
+									onChange={e => {
+										setHasDueDateLimit(e.target.checked);
+										if (!e.target.checked) {
+											setDueDate("");
+										}
+									}}
+									className="h-4 w-4 rounded border-border"
+								/>
+								{t("pages.assignmentForm.limitByDueDate")}
+							</label>
+							{hasDueDateLimit && <Input type="datetime-local" value={dueDate} onChange={e => setDueDate(e.target.value)} />}
 						</div>
 
 						<div className="flex items-center gap-2">

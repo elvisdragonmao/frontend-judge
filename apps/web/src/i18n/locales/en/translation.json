@@ -387,6 +387,7 @@
 			"titlePlaceholder": "Assignment title",
 			"typeLabel": "Type",
 			"dueDateOptional": "Due date (optional)",
+			"limitByDueDate": "Enforce a due date",
 			"allowMultiple": "Allow multiple submissions",
 			"descriptionMarkdown": "Assignment description (Markdown)",
 			"descriptionPlaceholder": "Write the assignment description in Markdown...",
