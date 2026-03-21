@@ -39,6 +39,7 @@ export class HtmlCssJsPipeline implements JudgePipeline {
 		for (const file of stripSharedSubmissionRoot(files)) {
 			const normalizedPath = normalizeSubmissionPath(file.path);
 			if (!normalizedPath) {
+				this.log(submissionId, `  Skipped invalid path: ${file.path}`);
 				continue;
 			}
 
@@ -122,7 +123,7 @@ export default defineConfig({
 				"--tmpfs",
 				"/tmp:rw,noexec,nosuid,size=128m",
 				"--tmpfs",
-				"/home/judge:rw,nosuid,size=64m",
+				"/home/judge:rw,noexec,nosuid,size=64m",
 				`--stop-timeout=${Math.ceil(timeoutMs / 1000)}`,
 				"-v",
 				`${workDir}:/work`,

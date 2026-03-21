@@ -110,10 +110,11 @@ export default defineConfig({
 		// 4. Install, build, then test in Docker
 		const submissionStoreDir = path.join(workDir, ".pnpm-store");
 		fs.mkdirSync(submissionStoreDir, { recursive: true });
-		fs.chmodSync(submissionStoreDir, 0o777);
+		fs.chmodSync(submissionStoreDir, 0o755);
 		await appendLog("🗃️ Using isolated pnpm store for this submission");
 
 		await appendLog("🗃️ Installing dependencies with pnpm");
+		// Network is only enabled for dependency download phase.
 		const installLog = await this.runDockerCommand(
 			workDir,
 			totalTimeoutMs,
@@ -162,14 +163,14 @@ export default defineConfig({
 				allowNetwork ? "--network=bridge" : "--network=none",
 				"--memory=1g",
 				"--cpus=2",
-				"--pids-limit=256",
+				"--pids-limit=512",
 				"--cap-drop=ALL",
 				"--security-opt=no-new-privileges:true",
 				"--read-only",
 				"--tmpfs",
 				"/tmp:rw,noexec,nosuid,size=128m",
 				"--tmpfs",
-				"/home/judge:rw,nosuid,size=64m",
+				"/home/judge:rw,noexec,nosuid,size=64m",
 				`--stop-timeout=${Math.ceil(timeoutMs / 1000)}`,
 				"-v",
 				`${workDir}:/work`,
