@@ -1,0 +1,584 @@
+{
+	"common": {
+		"appName": "emjudge",
+		"loading": "Loading...",
+		"cancel": "Cancel",
+		"save": "Save",
+		"edit": "Edit",
+		"preview": "Preview",
+		"confirm": "Confirm"
+	},
+	"languages": {
+		"zh-TW": "Traditional Chinese",
+		"zh-CN": "Simplified Chinese",
+		"en": "English",
+		"ja": "Japanese",
+		"fr": "French",
+		"de": "German",
+		"es": "Spanish",
+		"it": "Italian",
+		"pt-PT": "Portuguese (Portugal)",
+		"pt-BR": "Portuguese (Brazil)",
+		"ru": "Russian",
+		"ko": "Korean",
+		"uk": "Ukrainian",
+		"pl": "Polish",
+		"tr": "Turkish"
+	},
+	"roles": {
+		"student": "Student",
+		"teacher": "Teacher",
+		"admin": "Admin"
+	},
+	"assignmentTypes": {
+		"html-css-js": "HTML / CSS / JS",
+		"react": "React"
+	},
+	"layout": {
+		"nav": {
+			"classes": "Classes",
+			"admin": "Admin",
+			"logout": "Log out"
+		},
+		"theme": {
+			"toggle": "Toggle theme"
+		},
+		"language": {
+			"label": "Language"
+		}
+	},
+	"components": {
+		"submissionGrid": {
+			"screenshotAlt": "Screenshot of {{name}}",
+			"noScreenshot": "No screenshot",
+			"score": "Score: {{score}} / {{maxScore}}",
+			"userFiles": "@{{username}} / {{count}} files"
+		},
+		"scoreChart": {
+			"title": "Class cumulative score trend",
+			"tooltip": "{{time}}<br/>{{userName}}: {{value}}<br/>Latest assignment growth: {{assignmentTitle}}"
+		},
+		"fileUploader": {
+			"drag": "Drag files here to upload",
+			"helper": "You can also use the buttons below to choose files or a folder",
+			"chooseFiles": "Choose files",
+			"chooseFolder": "Choose folder",
+			"selectedFiles": "{{count}} files selected",
+			"uploading": "Uploading...",
+			"submit": "Submit assignment",
+			"ignoredFiles": "Automatically ignored {{count}} files (for example `node_modules`, `dist`, `build`)."
+		}
+	},
+	"templatePicker": {
+		"paramCount": "{{count}} params",
+		"noConfig": "No config needed",
+		"paramSettings": "{{name}} — Parameters",
+		"noExtraSettings": "This template does not need extra settings.",
+		"previewCode": "Preview code",
+		"applyReplace": "Replace apply",
+		"applyAppend": "Append apply",
+		"generatedCode": "Generated test code:",
+		"categories": {
+			"html-elements": "HTML Elements",
+			"styling": "Styling",
+			"functionality": "Functionality",
+			"page": "Page Quality",
+			"screenshot": "Screenshot",
+			"react": "React"
+		},
+		"templates": {
+			"html-required-elements": {
+				"name": "Required HTML elements",
+				"description": "Check whether the page contains required HTML elements such as nav, header, footer, main, and h1.",
+				"params": {
+					"selectors": {
+						"label": "CSS selectors to check (one per line)",
+						"placeholder": "nav\nheader\nfooter\nmain\nh1"
+					}
+				}
+			},
+			"html-element-count": {
+				"name": "HTML element counts",
+				"description": "Check whether specific element counts meet expectations, such as li, img, and a.",
+				"params": {
+					"rules": {
+						"label": "Rules (one per line: selector,min count)",
+						"placeholder": "li,3\nimg,2\na,5"
+					}
+				}
+			},
+			"html-form-elements": {
+				"name": "Form structure",
+				"description": "Check whether the page includes a complete form structure.",
+				"params": {
+					"formSelector": {
+						"label": "Form selector",
+						"placeholder": "form"
+					},
+					"inputNames": {
+						"label": "Required input name attributes (one per line)",
+						"placeholder": "name\nemail\npassword"
+					},
+					"requireSubmitButton": {
+						"label": "Require a submit button (1=yes, 0=no)",
+						"placeholder": "1"
+					}
+				}
+			},
+			"styling-property-check": {
+				"name": "CSS property checks",
+				"description": "Check whether elements use specific CSS property values.",
+				"params": {
+					"rules": {
+						"label": "Rules (one per line: selector | property | expected value)",
+						"placeholder": "nav | display | flex\nh1 | font-size | 24px\nbody | margin | 0px"
+					}
+				}
+			},
+			"styling-responsive": {
+				"name": "Responsive checks",
+				"description": "Check visibility or styling at different viewport widths.",
+				"params": {
+					"rules": {
+						"label": "Rules (one per line: width | selector | visible/hidden)",
+						"placeholder": "375 | .desktop-nav | hidden\n375 | .mobile-menu | visible\n1024 | .desktop-nav | visible"
+					}
+				}
+			},
+			"styling-no-default": {
+				"name": "Avoid browser defaults",
+				"description": "Check whether the page removes default styles and applies custom fonts or backgrounds.",
+				"params": {
+					"bodyNoMargin": {
+						"label": "Check body has no default margin (1=yes)",
+						"placeholder": "1"
+					},
+					"customFont": {
+						"label": "Check custom font is used (1=yes)",
+						"placeholder": "1"
+					},
+					"hasBackground": {
+						"label": "Check body has a custom background color (1=yes)",
+						"placeholder": "0"
+					}
+				}
+			},
+			"func-click-event": {
+				"name": "Button click interaction",
+				"description": "Click a button and verify the expected UI change appears.",
+				"params": {
+					"buttonSelector": {
+						"label": "Button selector",
+						"placeholder": "#myButton"
+					},
+					"resultSelector": {
+						"label": "Result selector",
+						"placeholder": "#result"
+					},
+					"expectedText": {
+						"label": "Expected text",
+						"placeholder": "Hello!"
+					}
+				}
+			},
+			"func-form-submit": {
+				"name": "Form submission validation",
+				"description": "Fill form fields, submit, and verify the result or validation state.",
+				"params": {
+					"fields": {
+						"label": "Fields to fill (one per line: selector | value)",
+						"placeholder": "#name | Alice\n#email | test@example.com"
+					},
+					"submitSelector": {
+						"label": "Submit button selector",
+						"placeholder": "button[type=\"submit\"]"
+					},
+					"successSelector": {
+						"label": "Success message selector",
+						"placeholder": ".success-message"
+					},
+					"successText": {
+						"label": "Success text (leave blank to only check visibility)",
+						"placeholder": "Submitted successfully"
+					}
+				}
+			},
+			"func-localstorage": {
+				"name": "LocalStorage persistence",
+				"description": "Check whether the app stores data correctly in localStorage after interaction.",
+				"params": {
+					"action": {
+						"label": "Trigger action (click selector)",
+						"placeholder": "#saveBtn"
+					},
+					"storageKey": {
+						"label": "localStorage key",
+						"placeholder": "userData"
+					}
+				}
+			},
+			"page-title": {
+				"name": "Page title",
+				"description": "Check whether the page title contains the expected text.",
+				"params": {
+					"title": {
+						"label": "Expected title (regex supported)",
+						"placeholder": "My Website"
+					}
+				}
+			},
+			"page-meta": {
+				"name": "Meta tags",
+				"description": "Check whether viewport, charset, and description meta tags are configured properly.",
+				"params": {
+					"requireViewport": {
+						"label": "Require viewport meta (1=yes)",
+						"placeholder": "1"
+					},
+					"requireCharset": {
+						"label": "Require charset meta (1=yes)",
+						"placeholder": "1"
+					},
+					"requireDescription": {
+						"label": "Require description meta (1=yes)",
+						"placeholder": "1"
+					}
+				}
+			},
+			"page-multi-page": {
+				"name": "Multi-page navigation",
+				"description": "Check whether the site includes multiple pages and whether links navigate correctly.",
+				"params": {
+					"links": {
+						"label": "Paths to check (one per line: path | expected title or selector)",
+						"placeholder": "/ | h1\n/about | h1\n/contact | form"
+					}
+				}
+			},
+			"page-no-console-errors": {
+				"name": "No console errors",
+				"description": "Verify that the page loads without JavaScript console errors."
+			},
+			"page-accessibility": {
+				"name": "Basic accessibility",
+				"description": "Check image alt text, semantic tags, heading order, and other basic accessibility items."
+			},
+			"screenshot-capture": {
+				"name": "Screenshot capture",
+				"description": "Capture full-page screenshots after loading the page.",
+				"params": {
+					"pages": {
+						"label": "Paths to capture (one per line)",
+						"placeholder": "/\n/about"
+					}
+				}
+			},
+			"react-component-render": {
+				"name": "React render checks",
+				"description": "Check whether React components render correctly and whether props are displayed.",
+				"params": {
+					"selectors": {
+						"label": "Selectors to check (one per line: selector | expected text)",
+						"placeholder": "[data-testid=\"app-title\"] | My App\n[data-testid=\"user-list\"] |"
+					}
+				}
+			},
+			"react-state-interaction": {
+				"name": "React state interaction",
+				"description": "Check React state behavior such as counters, toggles, and lists.",
+				"params": {
+					"scenario": {
+						"label": "Scenario (counter / toggle / list)",
+						"placeholder": "counter"
+					}
+				}
+			}
+		}
+	},
+	"pages": {
+		"home": {
+			"title": "Home",
+			"heroTag": "Playwright-powered auto grading",
+			"heroDescription": "A frontend assignment submission and auto-grading platform.",
+			"enterClasses": "Go to classes",
+			"login": "Log in",
+			"browseClasses": "Browse classes",
+			"featureUploadTitle": "Upload and grade",
+			"featureUploadDesc": "Drag and drop assignments or pick files manually, then the system queues and runs tests right away.",
+			"featureScreenshotTitle": "Screenshot feedback",
+			"featureScreenshotDesc": "Playwright captures screenshots in multiple sizes so design output is easy to compare.",
+			"featureScoreTitle": "Clear scoring",
+			"featureScoreDesc": "Reports and error details stay easy to scan, helping students fix issues faster.",
+			"ctaTitle": "All-in-one assignment management",
+			"ctaDescription": "Manage class setup, test templates, and grading feedback in one place.",
+			"ctaPrimary": "Get started",
+			"ctaSecondary": "Teacher sign in"
+		},
+		"login": {
+			"title": "Log in",
+			"username": "Username",
+			"usernamePlaceholder": "Enter username",
+			"password": "Password",
+			"passwordPlaceholder": "Enter password",
+			"invalidCredentials": "Incorrect username or password",
+			"serverError": "Login failed. Please try again later.",
+			"submitting": "Signing in...",
+			"submit": "Log in",
+			"hintClosed": "Self-service sign-up is currently disabled. Contact an administrator to get an account.",
+			"hintOpen": "Student self-service sign-up is open. You can also sign in with an existing account.",
+			"goRegister": "Create student account"
+		},
+		"register": {
+			"title": "Register",
+			"username": "Username",
+			"usernamePlaceholder": "Enter username",
+			"displayName": "Display name",
+			"displayNamePlaceholder": "Enter display name",
+			"password": "Password",
+			"passwordPlaceholder": "At least 6 characters",
+			"confirmPassword": "Confirm password",
+			"confirmPasswordPlaceholder": "Enter password again",
+			"hint": "New self-service accounts are always created as students.",
+			"submit": "Create student account",
+			"submitting": "Creating account...",
+			"backToLogin": "Back to login",
+			"passwordMismatch": "Passwords do not match",
+			"usernameTaken": "Username already exists",
+			"closedMessage": "Registration is currently closed. Please contact an administrator.",
+			"failed": "Registration failed. Please try again later."
+		},
+		"profile": {
+			"title": "Profile",
+			"accountInfo": "Account information",
+			"username": "Username",
+			"role": "Role",
+			"displayName": "Display name",
+			"updateDisplayName": "Update display name",
+			"displayNameUpdated": "Display name updated",
+			"displayNameUpdateFailed": "Update failed",
+			"requestFailed": "Request failed. Please try again later.",
+			"changePassword": "Change password",
+			"currentPassword": "Current password",
+			"newPassword": "New password",
+			"updatePassword": "Update password",
+			"passwordUpdated": "Password updated",
+			"passwordUpdateFailed": "Password update failed. Check whether the current password is correct.",
+			"roles": {
+				"student": "Student",
+				"teacher": "Teacher",
+				"admin": "Admin"
+			}
+		},
+		"classes": {
+			"title": "Classes",
+			"createClass": "Create class",
+			"cancelCreate": "Cancel",
+			"joinByCodeTitle": "Join with class code",
+			"joinByCodeDescription": "Enter a class code from your teacher to join a class.",
+			"joinCodePlaceholder": "Enter class code",
+			"joinByCode": "Join class",
+			"joinCodeSuccess": "Joined class successfully",
+			"joinCodeInvalid": "Invalid class code",
+			"joinCodeDisabled": "This class has disabled code-based joining",
+			"joinCodeAlreadyJoined": "You have already joined this class",
+			"joinCodeFailed": "Failed to join class. Please try again later.",
+			"createSuccess": "Class created",
+			"createFailed": "Failed to create class. Please try again later.",
+			"namePlaceholder": "Class name",
+			"descriptionPlaceholder": "Description (optional)",
+			"create": "Create",
+			"noDescription": "No description",
+			"memberCount": "{{count}} members",
+			"assignmentCount": "{{count}} assignments",
+			"emptyStudent": "You have not joined any classes yet",
+			"emptyStaff": "No classes have been created yet"
+		},
+		"assignmentForm": {
+			"basicInfo": "Basic information",
+			"titleLabel": "Title",
+			"titlePlaceholder": "Assignment title",
+			"typeLabel": "Type",
+			"dueDateOptional": "Due date (optional)",
+			"limitByDueDate": "Enforce a due date",
+			"allowMultiple": "Allow multiple submissions",
+			"descriptionMarkdown": "Assignment description (Markdown)",
+			"descriptionPlaceholder": "Write the assignment description in Markdown...",
+			"testSpec": "Test specification",
+			"showTemplates": "Use test templates",
+			"hideTemplates": "Hide templates",
+			"playwrightScript": "Playwright test script",
+			"scriptHelp": "Generate code from a template above or write it manually. Supports replace apply and append apply.",
+			"scriptPlaceholder": "import { test, expect } from '@playwright/test';\n\ntest('page title is correct', async ({ page }) => {\n  await page.goto('/');\n  await expect(page).toHaveTitle(/My Page/);\n});"
+		},
+		"assignmentCreate": {
+			"title": "Create assignment",
+			"creating": "Creating...",
+			"submit": "Create assignment",
+			"createFailed": "Failed to create assignment. Please try again later."
+		},
+		"assignmentEdit": {
+			"loadingTitle": "Loading assignment",
+			"notFoundTitle": "Assignment not found",
+			"pageTitle": "Edit assignment - {{title}}",
+			"title": "Edit assignment",
+			"submissionRecordActionTitle": "Handling existing submissions after update",
+			"keepRecords": "Keep current scores and records",
+			"deleteRecords": "Delete all current submissions and score records",
+			"deleteHelp": "Choosing delete clears the current submissions, runs, and artifacts for this assignment.",
+			"updating": "Updating...",
+			"submit": "Save changes",
+			"updateFailed": "Failed to update assignment. Please try again later."
+		},
+		"assignmentDetail": {
+			"loadingTitle": "Loading assignment",
+			"notFoundTitle": "Assignment not found",
+			"uploadFailedTooManyFiles": "Submission failed: too many files. Make sure build output such as node_modules and dist is excluded, then try again.",
+			"uploadFailedDefault": "Submission failed. Please try again.",
+			"expired": "Closed",
+			"editAssignment": "Edit assignment",
+			"dueAt": "Due: {{date}}",
+			"description": "Description",
+			"submitAssignment": "Submit assignment",
+			"submitSuccess": "Assignment submitted successfully!",
+			"submissionsTitle": "Submissions ({{count}})",
+			"hiddenDuplicates": "Duplicate submissions are hidden. Showing only each student's latest submission.",
+			"refreshIn": "Refresh in {{seconds}}s",
+			"latestOnly": "Latest only",
+			"list": "List",
+			"grid": "Grid",
+			"noSubmissions": "No submissions yet"
+		},
+		"submissionDetail": {
+			"imageLoadFailed": "Unable to load image",
+			"downloadFailed": "Download failed. Please try again later.",
+			"loadingTitle": "Loading submission",
+			"notFoundTitle": "Submission not found",
+			"pageTitle": "Submission details - {{name}}",
+			"backToAssignment": "Back to assignment",
+			"title": "Submission details",
+			"meta": "{{name}} (@{{username}}) / {{date}}",
+			"rejudging": "Requeueing...",
+			"rejudge": "Rejudge",
+			"inQueue": "Already in the grading queue",
+			"rejudgeSuccess": "Requeued for grading",
+			"rejudgeFailed": "Rejudge failed. Please try again later.",
+			"refreshIn": "Refresh in {{seconds}}s",
+			"scoreValue": "{{score}} / {{maxScore}} points",
+			"scoreLabel": "Score: {{score}} / {{maxScore}}",
+			"filesCount": "{{count}} files",
+			"uploadedFiles": "Uploaded files",
+			"downloading": "Downloading...",
+			"download": "Download",
+			"judgeResult": "Judge result",
+			"startedAt": "Started: {{date}}",
+			"finishedAt": "Finished: {{date}}",
+			"stages": "Stages",
+			"tests": "Test results",
+			"pass": "PASS",
+			"fail": "FAIL",
+			"points": "{{count}} pts",
+			"timeoutHint": "This grading run timed out inside the container. Usually npm install/build took too long or the app got stuck.",
+			"artifacts": "Screenshots and artifacts"
+		},
+		"classDetail": {
+			"loadingTitle": "Loading class",
+			"notFoundTitle": "Class not found",
+			"joinCodeTitle": "Class code",
+			"joinCodeDescription": "Students can join this class with the code. You can also reissue a new code at any time.",
+			"joinCodeEnabled": "Code-based joining is enabled",
+			"joinCodeDisabled": "Code-based joining is disabled",
+			"enableJoinCode": "Enable code join",
+			"disableJoinCode": "Disable code join",
+			"joinCodeLabel": "Current class code",
+			"copyJoinCode": "Copy code",
+			"reissueJoinCode": "Reissue code",
+			"joinCodeCopied": "Class code copied",
+			"reissueJoinCodeSuccess": "Class code reissued",
+			"joinCodeActionFailed": "Failed to update class code settings. Please try again later.",
+			"memberActionFailed": "Failed to update class members. Please try again later.",
+			"newAssignment": "New assignment",
+			"assignmentsTitle": "Assignments",
+			"noAssignments": "No assignments yet",
+			"dueDate": "Due: {{date}}",
+			"submissionsCount": "{{count}} submissions",
+			"membersTitle": "Members ({{count}})",
+			"collapse": "Collapse",
+			"addMembers": "Add members",
+			"searchPlaceholder": "Search by username or display name...",
+			"noMatchingUsers": "No matching users found",
+			"noAvailableUsers": "No users available to add",
+			"join": "Add",
+			"usernameHeader": "Username",
+			"displayNameHeader": "Display name",
+			"roleHeader": "Role",
+			"actionsHeader": "Actions",
+			"remove": "Remove",
+			"noMembers": "No members yet"
+		},
+		"admin": {
+			"title": "Admin",
+			"registrationTitle": "Registration settings",
+			"registrationDescription": "Control whether students can create their own accounts from the login page. Default is closed.",
+			"registrationOpen": "Student registration is currently open",
+			"registrationClosed": "Student registration is currently closed",
+			"openRegistration": "Open registration",
+			"closeRegistration": "Close registration",
+			"createUser": "Create user",
+			"bulkImport": "Bulk import",
+			"createUserTitle": "Create user",
+			"usernamePlaceholder": "Username",
+			"passwordPlaceholder": "Password",
+			"displayNamePlaceholder": "Display name",
+			"create": "Create",
+			"bulkImportTitle": "Bulk import",
+			"bulkImportHelp": "One user per line in this format: username,password,displayName,role(student/teacher/admin)",
+			"bulkImportPlaceholder": "student01,pass123,Alice,student",
+			"import": "Import",
+			"importDone": "Import finished",
+			"importPartial": "Imported with some failures, failed rows",
+			"importFailed": "Bulk import failed. Please try again later.",
+			"userListTitle": "Users ({{count}})",
+			"noClassJoined": "Not in any class",
+			"newPasswordPlaceholder": "New password",
+			"resetPassword": "Reset password",
+			"resetPasswordSuccess": "Password reset",
+			"resetPasswordFailed": "Failed to reset password. Please try again later.",
+			"createUserSuccess": "User created",
+			"createUserFailed": "Failed to create user. Please try again later.",
+			"registrationUpdateFailed": "Failed to update registration settings. Please try again later.",
+			"previousPage": "Previous",
+			"currentPage": "Page {{page}}",
+			"nextPage": "Next",
+			"invalidFormat": "Invalid format"
+		},
+		"notFound": {
+			"title": "Page not found",
+			"pathLabel": "missing-route",
+			"heading": "This page slipped out of the route tree.",
+			"description": "The address may be outdated, mistyped, or no longer available. Jump back to a known page and keep moving.",
+			"backHome": "Back home",
+			"goClasses": "Open classes",
+			"goLogin": "Go to login",
+			"hintCheckUrl": "Check the URL for typos or an old bookmark.",
+			"hintNavigate": "Use the main navigation to return to a valid section.",
+			"hintRetry": "If a link brought you here, refresh or try again later."
+		}
+	},
+	"submissionStatus": {
+		"pending": "Pending",
+		"queued": "Queued",
+		"running": "Running",
+		"completed": "Completed",
+		"failed": "Failed",
+		"error": "Error"
+	},
+	"judgeStages": {
+		"download": "Download files (MinIO)",
+		"prepare": "Prepare judge environment",
+		"install": "Install dependencies (pnpm)",
+		"build": "Build project",
+		"test": "Run tests (Playwright)",
+		"upload": "Upload artifacts (MinIO)",
+		"persist": "Persist results"
+	}
+}
