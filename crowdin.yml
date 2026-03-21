@@ -20,19 +20,3 @@ export_languages:
 files:
   - source: /apps/web/src/i18n/locales/en/translation.json
     translation: /apps/web/src/i18n/locales/%locale%/%original_file_name%
-    languages_mapping:
-      locale:
-        zh-CN: zh-CN
-        zh-TW: zh-TW
-        ja: ja
-        fr: fr
-        de: de
-        es: es
-        it: it
-        pt-PT: pt-PT
-        pt-BR: pt-BR
-        ru: ru
-        ko: ko
-        uk: uk
-        pl: pl
-        tr: tr
